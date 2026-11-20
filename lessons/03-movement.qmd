@@ -1,7 +1,6 @@
 ---
 title: "Things that move"
 subtitle: "Use the game loop to move the researcher with the keyboard."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,217 @@ format:
 - Turn a sprite to face the way it moves.
 - Keep an object on screen with `Clamp`.
 :::
+
+## Where you start
+
+You have [stopping point A](02-first-scene.qmd#what-you-have): a floor, a freezer and a researcher who stands still. By the end of this lesson you can walk the researcher to a sample, pick it up, and carry it to the freezer.
+
+Everything in this lesson happens in `update(time, delta)`, the method Phaser calls every frame.
+
+::: {.content-hidden when-format="revealjs"}
+- `time` is how long the game has been running, in milliseconds.
+- `delta` is how long the last frame took, in milliseconds: about 16.7 at 60 frames per second.
+
+You'll use `delta` all the time and `time` rarely.
+:::
+
+## Move something
+
+The smallest possible movement: slide the researcher right at 200 pixels per second.
+
+```js
+update(time, delta) {
+  this.player.x += 200 * (delta / 1000);
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+Save, and the researcher walks off the right edge of the screen. `200 * (delta / 1000)` is speed × seconds, so the distance per second is the same at any frame rate ([lesson 0](00-engine.qmd#frames-arent-all-the-same-length)).
+
+`x` and `y` are plain properties: you can read them, change them, or set both with `setPosition(x, y)`.
+:::
+
+## Read the keyboard
+
+Ask Phaser for keys once, in `create()`. Check them every frame, in `update()`.
+
+```js
+create() {
+  // ...
+  this.cursors = this.input.keyboard.createCursorKeys(); // up, down, left, right, space, shift
+  this.wasd = this.input.keyboard.addKeys('W,A,S,D');     // { W, A, S, D }
+}
+
+update(time, delta) {
+  if (this.cursors.right.isDown) {
+    this.player.x += 200 * (delta / 1000);
+  }
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+Each key is an object, and `isDown` is `true` for every frame the key is held. For something that should happen once per press (open a menu, jump), use `Phaser.Input.Keyboard.JustDown(key)` instead: it's `true` only on the first frame.
+
+Supporting both the arrows and WASD costs one line and saves left-handed players and laptop users a lot of grief.
+:::
+
+## Turn keys into a direction
+
+Instead of four `if`s, turn the keys into a direction: `dx` is −1, 0 or 1, and so is `dy`.
+
+```js
+const k = this.cursors;
+const w = this.wasd;
+const dx = (k.right.isDown || w.D.isDown ? 1 : 0) - (k.left.isDown || w.A.isDown ? 1 : 0);
+const dy = (k.down.isDown || w.S.isDown ? 1 : 0) - (k.up.isDown || w.W.isDown ? 1 : 0);
+```
+
+::: {.content-hidden when-format="revealjs"}
+Right gives `1 - 0 = 1`. Left gives `0 - 1 = -1`. Both at once cancel out to `0`, which is what you'd want. Remember that `y` grows **down**, so the down key is `+1`.
+:::
+
+## Diagonals are too fast
+
+Holding right and down moves `1` along `x` **and** `1` along `y` each step. That's √2 ≈ 1.41 times as far as moving straight.
+
+```js
+const length = Math.hypot(dx, dy) || 1; // 1 for straight, 1.41 for diagonal, 0 → 1 when still
+const step = (SPEED * delta) / 1000;
+this.player.x += (dx / length) * step;
+this.player.y += (dy / length) * step;
+```
+
+::: {.content-hidden when-format="revealjs"}
+Dividing by the length makes the direction a **unit vector**: length 1, whichever way it points. `|| 1` avoids dividing by zero when no key is down.
+
+You'll meet `Phaser.Math.Vector2` in lesson 4, which does this for you with `.normalize()`. It's worth doing by hand once.
+:::
+
+## Face the way you walk
+
+The researcher spritesheet has frames for facing down (1), up (5) and sideways (9). Sideways faces right, so flip it for left.
+
+```js
+if (dx !== 0) {
+  this.player.setFrame(9).setFlipX(dx < 0);
+} else if (dy !== 0) {
+  this.player.setFrame(dy < 0 ? 5 : 1);
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+`setFlipX(true)` mirrors the sprite left to right. It's free: one spritesheet covers both directions.
+
+When no key is down, nothing changes, so the researcher keeps facing the last way they walked. It's a tiny thing that makes a character feel solid. Lesson 5 replaces single frames with walk animations.
+:::
+
+## Stay on the screen
+
+```js
+const { width, height } = this.scale;
+this.player.x = Phaser.Math.Clamp(this.player.x, 32, width - 32);
+this.player.y = Phaser.Math.Clamp(this.player.y, 32, height - 32);
+```
+
+::: {.content-hidden when-format="revealjs"}
+`Clamp(value, min, max)` keeps a number in a range. The 32 pixels of margin is half the researcher's size at `setScale(2)`, so they stop at the edge instead of halfway off it.
+
+`Phaser.Math` is full of small helpers like this: `Between` (a random integer), `Distance.Between`, `Angle.Between`, `Linear` (interpolate). Check it before writing your own.
+:::
+
+## Pick up and carry
+
+No physics yet, so "touching" means "close enough". Each frame, measure the distance to the sample and to the freezer.
+
+{{< snippet file="stopping-points/stopB/src/scenes/Play.js" lines="62-77" >}}
+
+::: {.content-hidden when-format="revealjs"}
+While you carry the sample, it follows you: every frame, put it 44 pixels above the researcher's head. Close enough to the freezer, and the sample goes back to the rack and the counter goes up.
+
+`this.carrying` is the first piece of **game state**: a value that decides what the game does next. Watch how much of the game ends up depending on values like this. Lesson 7 is about where they should live.
+:::
+
+## The whole update
+
+{{< snippet file="stopping-points/stopB/src/scenes/Play.js" method="update" >}}
+
+## What you have
+
+{{< game stopping-points/stopB caption="Stopping point B. Walk to the tube on the left, then to the freezer." >}}
+
+::: {.callout-tip title="Stopping point B" .stopping-point}
+To catch up, copy `stopping-points/stopB` and run it:
+
+```bash
+cp -r stopping-points/stopB my-cold-chain-b
+cd my-cold-chain-b && npm install && npm run dev
+```
+:::
+
+::: {.content-hidden when-format="revealjs"}
+Walk over the freezer, though: the researcher is drawn on top of it, and walks straight through. Nothing in the game knows the freezer is solid. That's what physics is for, in lesson 4.
+:::
+
+## Going further: containers
+
+A **container** groups game objects so they move, scale and rotate together. Instead of moving the tube by hand every frame, you could carry it in a container with the researcher:
+
+```js
+this.carrier = this.add.container(width / 2, height / 2);
+this.carrier.add(this.player);           // positions inside are relative to the container
+this.player.setPosition(0, 0);
+// on pickup:
+this.carrier.add(this.tube);
+this.tube.setPosition(0, -44);
+// in update(): move this.carrier instead of this.player
+```
+
+::: {.content-hidden when-format="revealjs"}
+Containers are handy for things that really are one object made of parts: a health bar with a frame and a fill, a cart with a box on it. *Cold Chain* doesn't use one for the player, because physics bodies (lesson 4) don't work well inside containers. Moving the tube by hand is simpler.
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 3.1: Build it — sprint" .exercise #ex-3.1}
+Make the researcher move 1.8 times faster while **Shift** is held. You don't need any new keys.
+
+[Answer](../answers/03-movement-answers.qmd#ex-3.1)
+:::
+
+::: {.callout-tip title="Exercise 3.2: Predict it — the gaming monitor" .exercise #ex-3.2}
+A labmate wrote `this.player.x += dx * 3.3;` instead of using `delta`. On their 60 Hz laptop it moves at about 200 pixels per second. How fast does it move on a 144 Hz monitor? In a browser tab running at 30 frames per second?
+
+[Answer](../answers/03-movement-answers.qmd#ex-3.2)
+:::
+
+::: {.callout-tip title="Exercise 3.3: Spot the bug — gone in a flash" .exercise #ex-3.3}
+The researcher vanishes off the side of the screen the moment you touch an arrow key. What's wrong?
+
+```js
+const SPEED = 200;
+
+update(time, delta) {
+  // ...dx and dy as in the lesson...
+  this.player.x += dx * SPEED * delta;
+  this.player.y += dy * SPEED * delta;
+}
+```
+
+[Answer](../answers/03-movement-answers.qmd#ex-3.3)
+:::
+
+::: {.callout-tip title="Exercise 3.4: Tune it — a fair grab" .exercise #ex-3.4}
+Try `REACH` at 10, 40 and 120, and `SPEED` at 80, 200 and 500. Which combination feels best, and why does one that's "too generous" feel as wrong as one that's too strict?
+
+[Answer](../answers/03-movement-answers.qmd#ex-3.4)
+:::
+
+## Key points
+
+- `update(time, delta)` runs every frame. Move things by *speed × `delta` / 1000*.
+- Create keys once in `create()`. Check `isDown` every frame in `update()`, or `JustDown` for one-off presses.
+- Turn keys into a direction, and divide by its length so diagonals aren't faster.
+- `setFrame` and `setFlipX` make a sprite face the way it moves.
+- Without physics, "touching" means checking distances yourself, and nothing is solid.
 
 **Next:** [Lesson 4: Physics](04-physics.qmd)

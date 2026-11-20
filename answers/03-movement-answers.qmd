@@ -1,0 +1,62 @@
+---
+title: "Module 3 answers"
+subtitle: "Things that move"
+---
+
+Back to [Module 3](../lessons/03-movement.qmd).
+
+## Exercise 3.1: Build it — sprint {#ex-3.1}
+
+`createCursorKeys()` already gives you `shift` (and `space`), so it's one constant and one line:
+
+```js
+const SPEED = 200;
+const SPRINT = 1.8; // <1>
+
+update(time, delta) {
+  // ...dx and dy...
+  const speed = this.cursors.shift.isDown ? SPEED * SPRINT : SPEED; // <2>
+  const step = (speed * delta) / 1000;
+  // ...move by step as before...
+}
+```
+1. A named constant, next to `SPEED`, so the next person (or you, in lesson 8) can find and tune it.
+2. A new `speed` for this frame. Don't change `SPEED` itself, or the researcher speeds up a bit more every frame and never slows down.
+
+{{< game solutions/03/ex-3.1 caption="Hold shift to sprint." >}}
+
+The full file is in `solutions/03/ex-3.1/`.
+
+## Exercise 3.2: Predict it — the gaming monitor {#ex-3.2}
+
+3.3 pixels a frame:
+
+| Frames per second | Speed |
+|---|---|
+| 30 | 3.3 × 30 = **99 px/s**, half speed |
+| 60 | 3.3 × 60 = **198 px/s**, as intended |
+| 144 | 3.3 × 144 = **475 px/s**, more than twice as fast |
+
+On a fast monitor the game is harder; in a background tab or on a struggling laptop it crawls. Worse, a frame rate that changes during play (a busy moment, a garbage collection pause) makes movement stutter. Speed × `delta` fixes all of it.
+
+## Exercise 3.3: Spot the bug — gone in a flash {#ex-3.3}
+
+`delta` is in **milliseconds**. `SPEED * delta` is 200 × 16.7 ≈ 3,333 pixels per frame, which is 1,000 times too fast: the researcher crosses the screen in a single frame and `Clamp` (if it's there) pins them to the edge.
+
+Divide by 1000 to turn milliseconds into seconds:
+
+```js
+this.player.x += (dx * SPEED * delta) / 1000;
+```
+
+Units are the easiest thing to get wrong in game code, and the error is always a power of 1000. Writing speeds as "pixels per second" and converting in exactly one place helps.
+
+## Exercise 3.4: Tune it — a fair grab {#ex-3.4}
+
+There's no single right answer. Most people settle near the defaults: `SPEED` 180–240 and `REACH` around the size of the sprites, 30–50.
+
+- **Too strict** (`REACH` 10): you have to line up pixel-perfectly. It feels like the game is fighting you, especially at high speed, when you overshoot.
+- **Too generous** (`REACH` 120): the sample jumps to you from across the room. It works, but it doesn't feel like *you* did anything. Generosity you can see breaks the illusion.
+- **Speed and reach interact.** At 500 px/s you cover 8 pixels a frame, so a small reach is easy to skip past. Faster games need bigger targets.
+
+The good zone is slightly more generous than what you can see: the player believes they touched it, and never notices the help. Professional games do this everywhere (bigger hitboxes on pickups, smaller ones on enemies). You'll come back to this in lesson 8.

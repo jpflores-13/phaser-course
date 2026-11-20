@@ -39,3 +39,8 @@ $code-block-font-size: 0.62em;
   height: auto;
 }
 
+
+.reveal code, .reveal pre {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}

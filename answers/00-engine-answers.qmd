@@ -1,0 +1,36 @@
+---
+title: "Module 0 answers"
+subtitle: "What a game engine does"
+---
+
+Back to [Module 0](../lessons/00-engine.qmd).
+
+## Exercise 0.1: Predict it — the slow phone {#ex-0.1}
+
+| | 60 Hz laptop | 30 fps phone |
+|---|---|---|
+| `x += 5` | 5 × 60 = **300** | 5 × 30 = **150** |
+| `x += 300 * delta / 1000` | 60 frames × 16.7 ms → **300** | 30 frames × 33.3 ms → **300** |
+
+The per-frame version runs at half speed on the phone. The `delta` version takes bigger steps when frames are longer, so it covers the same distance in the same time.
+
+This also matters on one machine: a frame that takes longer than usual (the browser is busy, a big image just loaded) would otherwise make everything stutter backwards in time. Physics bodies (lesson 4) handle `delta` for you, but anything you move by hand in `update()` needs it.
+
+## Exercise 0.2: Measure it — your screen's frame rate {#ex-0.2}
+
+You get roughly your screen's refresh rate: about 60 on most laptops, 120 on a recent MacBook Pro or iPad, 144 or more on a gaming monitor. It's rarely exactly the number, because the first and last callbacks don't line up with the second.
+
+In a background tab you get far fewer, often 1 or none. Browsers stop calling `requestAnimationFrame` for pages you can't see, to save battery. That's why a Phaser game pauses when you switch tabs, and why `delta` can be huge for the first frame after you come back. Phaser smooths that out by default, so things don't jump across the screen.
+
+With `?debug`, *Cold Chain* draws every **physics body**: the boxes are the shapes the physics engine uses for collisions, which are not always the same as the pictures. The researcher's box covers only the feet, so you can walk "behind" the top of a bench. The lines show each body's velocity: which way it's going and how fast. You'll turn this on often from lesson 4.
+
+## Exercise 0.3: Sort it — whose job? {#ex-0.3}
+
+1. **Yours.** Rules and numbers are game design. (In *Cold Chain* it's `thaw.perSecond` in `tuning.js`, lesson 8.)
+2. **Phaser's.** You say what's on screen; Phaser draws it every frame.
+3. **Phaser's.** It listens to the browser's keyboard events and keeps track of which keys are down.
+4. **Yours.** The same key could mean "steer", "aim" or "open the menu".
+5. **Both.** Phaser's physics stops the body, but only between objects you told it should collide (`this.physics.add.collider(player, walls)`).
+6. **Yours.** Phaser tells you the collision happened, by calling a function you gave it. What it *means* (a knockback, a thawing sample) is your code.
+
+A useful rule: Phaser handles *how*, you decide *what* and *why*.

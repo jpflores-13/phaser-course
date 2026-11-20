@@ -1,7 +1,6 @@
 ---
 title: "What a game engine does"
 subtitle: "A game is a loop that runs sixty times a second. Everything else follows from that."
-draft: true
 format:
   html: default
   revealjs:
@@ -17,5 +16,215 @@ format:
 - Explain why movement is scaled by the time between frames.
 - Say what Phaser does for you and what you write yourself.
 :::
+
+## Start by playing
+
+This is *Cold Chain*, the game you'll build over the next three days. Play it for a minute before reading on.
+
+{{< game stopping-points/stopE caption="Click the game, then press space. Arrow keys or WASD to walk." >}}
+
+::: {.content-hidden when-format="revealjs"}
+While you play, notice how many things change at once: you move, the carts move, the thaw meter fills, the clock ticks, frost drifts off the sample. None of them waits for the others. That's the first thing to understand about games.
+:::
+
+## Most code you write waits
+
+A script runs top to bottom and stops. A Shiny app or a web page waits for an event (a click, a new input) and reacts to it.
+
+```r
+# Shiny: nothing happens until the slider moves
+output$plot <- renderPlot({
+  hist(rnorm(input$n))
+})
+```
+
+A game can't wait. The carts have to keep moving whether you press a key or not.
+
+## A game is a loop
+
+Every frame, about 60 times a second, the game does three things:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+  A["read input<br/>which keys are down?"] --> B["update the world<br/>move things, check collisions, run the rules"]
+  B --> C["draw the frame<br/>everything, in its new place"]
+  C --> A
+```
+
+::: {.content-hidden when-format="revealjs"}
+In code, the idea is this (you never write it yourself; Phaser does):
+
+```js
+function frame(now) {
+  readInput();
+  update(now);
+  draw();
+  requestAnimationFrame(frame); // ask the browser to call frame() again before the next repaint
+}
+requestAnimationFrame(frame);
+```
+
+`requestAnimationFrame` is the browser's way of saying "call me back when it's time to draw the next frame". On most screens that's 60 times a second. On a 120 Hz laptop or a 144 Hz gaming monitor, it's more. On a phone saving battery, or in a background tab, it's less, and sometimes not at all.
+:::
+
+## Frames aren't all the same length
+
+If you move a cart 4 pixels **every frame**, how fast it goes depends on the screen it runs on.
+
+| Screen | Frames per second | `x += 4` moves |
+|---|---|---|
+| Phone saving battery | 30 | 120 px/s |
+| Most laptops | 60 | 240 px/s |
+| Gaming monitor | 144 | 576 px/s |
+
+The fix: every frame, Phaser tells you **`delta`**, how many milliseconds passed since the last frame. Move by *speed × time*, and the speed is the same everywhere.
+
+```js
+x += 240 * (delta / 1000); // 240 pixels per second, on any screen
+```
+
+## See it
+
+::: {.content-hidden when-format="revealjs"}
+Both carts below are meant to move at 240 pixels per second. The top one moves 4 pixels every frame. The bottom one moves `240 * delta / 1000`. Drag the frame rate and watch which one changes speed.
+:::
+
+```{ojs}
+//| echo: false
+viewof fps = Inputs.range([10, 144], {value: 60, step: 1, label: "frames per second"})
+```
+
+```{ojs}
+//| echo: false
+{
+  const W = 960, H = 220, speed = 240;
+  const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`)
+    .style("width", "100%").style("max-width", "720px")
+    .style("background", "#d8dee6").style("border-radius", "6px");
+  const lane = (y, label) => {
+    svg.append("line").attr("x1", 0).attr("x2", W).attr("y1", y + 22).attr("y2", y + 22)
+      .attr("stroke", "#bcc5d1").attr("stroke-width", 2);
+    svg.append("text").attr("x", 12).attr("y", y - 18).attr("font-family", "monospace")
+      .attr("font-size", 20).attr("fill", "#0f172a").text(label);
+    return svg.append("rect").attr("y", y).attr("width", 44).attr("height", 44)
+      .attr("rx", 4).attr("fill", "#9aa5b1").attr("stroke", "#2b2433").attr("stroke-width", 3);
+  };
+  const a = lane(60, "x += 4 every frame");
+  const b = lane(160, "x += 240 * delta / 1000");
+  let xa = 0, xb = 0, last = performance.now(), acc = 0;
+  // Observable runs the code between yields once per browser frame
+  while (true) {
+    const now = performance.now();
+    acc += now - last;
+    last = now;
+    if (acc >= 1000 / fps) {    // pretend the screen only draws `fps` times a second
+      const delta = acc;
+      acc = 0;
+      xa = (xa + 4) % W;
+      xb = (xb + speed * delta / 1000) % W;
+      a.attr("x", xa);
+      b.attr("x", xb);
+    }
+    yield svg.node();
+  }
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+At 60 frames per second they keep pace. Anywhere else, the top cart is wrong.
+:::
+
+## What Phaser does, and what you do
+
+| Phaser does | You write |
+|---|---|
+| Runs the loop and measures `delta` | What happens each frame, in `update()` |
+| Loads images, sounds and maps | Which files to load, in `preload()` |
+| Draws everything, with WebGL or Canvas | What's on screen and where, in `create()` |
+| Reads the keyboard, mouse, touch and gamepads | What each input means |
+| Moves physics bodies and detects collisions | What happens when things collide |
+| Plays sounds, runs tweens and timers | When, and which |
+| Scales the game to the screen | How big your game world is |
+
+::: {.content-hidden when-format="revealjs"}
+A game engine is the left column. Some engines (Unity, Godot) also give you an editor where you drag things into a level. Phaser is code only: it's a JavaScript library, closer to a plotting package than to an application. That makes it a good fit for people who already think in code, and it's why the games run in any browser.
+:::
+
+## Phaser in one picture
+
+```{mermaid}
+%%| fig-width: 9
+flowchart TB
+  G["Phaser.Game<br/>the loop, the renderer, the input"] --> S1["Scene: Title"]
+  G --> S2["Scene: Play"]
+  G --> S3["Scene: HUD"]
+  S2 --> O["game objects<br/>sprites, text, tilemaps"]
+  S2 --> P["systems<br/>physics, cameras, tweens, sound"]
+```
+
+::: {.content-hidden when-format="revealjs"}
+One **game** holds one or more **scenes**. A scene is a self-contained screen: the title, a level, the HUD on top of the level. Each scene has its own game objects and its own systems. Lesson 2 builds your first scene, and lesson 7 splits *Cold Chain* into several.
+:::
+
+## Phaser 3 and Phaser 4
+
+This course uses **Phaser 4.2.1**. Phaser 4 is recent, and most tutorials, forum answers and books are still for Phaser 3.
+
+- Most of the API is the same, so Phaser 3 examples usually work.
+- The renderer was rewritten, and a few methods changed or now do nothing.
+- When the course meets one, it gets a box like this:
+
+::: {.callout-warning title="Phaser 3 habit" .phaser3}
+In Phaser 3, `sprite.setTintFill(0xffffff)` flashes a sprite solid white. In Phaser 4 it still exists, but does nothing. Use `sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL)`.
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 0.1: Predict it — the slow phone" .exercise #ex-0.1}
+A cart starts at `x = 0`. Each frame, one version of the game runs `x += 5` and another runs `x += 300 * delta / 1000`. Where is the cart after one second on a 60 Hz laptop? On a phone running at 30 frames per second?
+
+[Answer](../answers/00-engine-answers.qmd#ex-0.1)
+:::
+
+::: {.callout-tip title="Exercise 0.2: Measure it — your screen's frame rate" .exercise #ex-0.2}
+Open the browser console on this page (`F12`, or `Cmd` + `Option` + `I` on a Mac) and paste this. It counts how many times the browser calls back in one second.
+
+```js
+let frames = 0;
+const start = performance.now();
+function count(now) {
+  frames += 1;
+  if (now - start < 1000) requestAnimationFrame(count);
+  else console.log(`${frames} frames in one second`);
+}
+requestAnimationFrame(count);
+```
+
+What number do you get? Run it again with the window in the background, or on a phone. Then open the game in a new tab, add `?debug` to the end of the address, and reload. What are the boxes and lines?
+
+[Answer](../answers/00-engine-answers.qmd#ex-0.2)
+:::
+
+::: {.callout-tip title="Exercise 0.3: Sort it — whose job?" .exercise #ex-0.3}
+For each of these, is it Phaser's job or yours?
+
+1. Deciding that a sample thaws in 14 seconds.
+2. Drawing the researcher 60 times a second.
+3. Noticing that the arrow key is down.
+4. Deciding that the arrow key means "walk left".
+5. Stopping the researcher at a wall.
+6. Deciding what happens when a cart hits the researcher.
+
+[Answer](../answers/00-engine-answers.qmd#ex-0.3)
+:::
+
+## Key points
+
+- A game is a loop: read input, update the world, draw the frame, about 60 times a second.
+- Frames vary in length. Move things by *speed × `delta`*, never a fixed amount per frame.
+- Phaser runs the loop, loads files, draws, reads input and does physics. You decide what it all means.
+- One game holds scenes. Each scene holds game objects and systems.
+- Phaser 4 is mostly Phaser 3 with a new renderer. Watch for the few methods that changed.
 
 **Next:** [Lesson 1: JavaScript for R and Python people](01-javascript.qmd)

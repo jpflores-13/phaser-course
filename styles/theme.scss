@@ -137,3 +137,9 @@ pre.sourceCode, div.sourceCode {
 
 // ---- side-by-side language tabs -------------------------------------------
 .panel-tabset .nav-link { font-family: $font-family-monospace; font-size: 0.85rem; }
+
+// show code exactly as typed: no => or !== ligatures for people learning the syntax
+code, pre {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}

@@ -1,7 +1,6 @@
 ---
 title: "JavaScript for R and Python people"
 subtitle: "Just enough JavaScript to read and write a Phaser game."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,410 @@ format:
 - Import and export between files.
 - Use the browser console as a REPL.
 :::
+
+## Your REPL is the browser
+
+Open any web page, then the developer tools: `F12`, or `Cmd` + `Option` + `I` on a Mac. The **Console** tab is a JavaScript prompt, like the R console or a Python shell.
+
+```js
+> 2 + 2
+4
+> 'cold' + ' ' + 'chain'
+'cold chain'
+> Math.max(3, 9, 4)
+9
+```
+
+::: {.content-hidden when-format="revealjs"}
+Keep a console open for this whole lesson and try every example. While your game is running with `npm run dev`, the console can also reach into it: `game.scene.getScene('Play')` gives you the running scene, and you can change things live.
+:::
+
+## Variables
+
+::: {.panel-tabset group="language"}
+## R
+```r
+speed <- 200
+speed <- 250        # fine
+name <- "researcher"
+```
+## Python
+```python
+speed = 200
+speed = 250         # fine
+name = "researcher"
+```
+## JavaScript
+```js
+let speed = 200;
+speed = 250;              // fine: let can change
+const name = 'researcher';
+name = 'cart';            // TypeError: Assignment to constant variable.
+```
+:::
+
+Use `const` by default and `let` when the value has to change. You'll see `var` in old code. Don't use it.
+
+::: {.content-hidden when-format="revealjs"}
+Semicolons at the end of lines are optional in JavaScript, but the course (and most Phaser code) uses them. Single and double quotes mean the same thing.
+:::
+
+## Equality, and nothing
+
+::: {.panel-tabset group="language"}
+## R
+```r
+x == 5
+is.null(x)
+is.na(x)
+```
+## Python
+```python
+x == 5
+x is None
+```
+## JavaScript
+```js
+x === 5        // use three: no type conversion
+x !== 5
+x === null     // "deliberately empty"
+x === undefined // "never set"
+```
+:::
+
+::: {.content-hidden when-format="revealjs"}
+`==` also exists, but it converts types first, so `'5' == 5` is `true`. Always use `===` and `!==`.
+
+JavaScript has two kinds of nothing. `undefined` is what you get from a variable or property that was never set. `null` is what code returns on purpose to mean "no value". Two operators make them easy to handle, and you'll see both in *Cold Chain*:
+
+```js
+const floor = data.floor ?? 0;              // ?? : use 0 if data.floor is null or undefined
+const speed = cart.getData('config')?.speed; // ?. : undefined instead of an error if config is missing
+```
+:::
+
+## Strings
+
+::: {.panel-tabset group="language"}
+## R
+```r
+sprintf("Stored: %d / %d", stored, target)
+glue::glue("Stored: {stored} / {target}")
+```
+## Python
+```python
+f"Stored: {stored} / {target}"
+```
+## JavaScript
+```js
+`Stored: ${stored} / ${target}`   // backticks, not quotes
+```
+:::
+
+## Arrays
+
+::: {.panel-tabset group="language"}
+## R
+```r
+thaw <- c(10, 55, 80)
+thaw[1]              # 10: R counts from 1
+length(thaw)
+thaw[thaw > 50]
+thaw * 2
+```
+## Python
+```python
+thaw = [10, 55, 80]
+thaw[0]              # 10
+len(thaw)
+[t for t in thaw if t > 50]
+[t * 2 for t in thaw]
+```
+## JavaScript
+```js
+const thaw = [10, 55, 80];
+thaw[0];                       // 10: counts from 0, like Python
+thaw.length;
+thaw.filter((t) => t > 50);    // [55, 80]
+thaw.map((t) => t * 2);        // [20, 110, 160]
+thaw.push(95);                 // add to the end (const arrays can still change inside)
+```
+:::
+
+::: {.content-hidden when-format="revealjs"}
+There's no vectorised arithmetic: `thaw * 2` is `NaN`. Use `map`, `filter` and `forEach` instead of loops when you can, as you would with `purrr` or a list comprehension.
+:::
+
+## Objects
+
+An object is a bag of named values, like a named list in R or a dict in Python. Phaser configs are objects.
+
+::: {.panel-tabset group="language"}
+## R
+```r
+cart <- list(axis = "x", speed = 110)
+cart$speed
+cart$speed <- 120
+```
+## Python
+```python
+cart = {"axis": "x", "speed": 110}
+cart["speed"]
+cart["speed"] = 120
+```
+## JavaScript
+```js
+const cart = { axis: 'x', speed: 110 };
+cart.speed;          // 110
+cart.speed = 120;    // fine: const means "always this object", not "frozen"
+const { axis, speed } = cart;   // unpack into two variables
+```
+:::
+
+::: {.content-hidden when-format="revealjs"}
+That last line is **destructuring**. You'll see it everywhere in Phaser code: `const { width, height } = this.scale;` is short for `const width = this.scale.width; const height = this.scale.height;`.
+:::
+
+## Functions
+
+::: {.panel-tabset group="language"}
+## R
+```r
+thaw_after <- function(seconds, rate = 7) {
+  seconds * rate
+}
+```
+## Python
+```python
+def thaw_after(seconds, rate=7):
+    return seconds * rate
+```
+## JavaScript
+```js
+function thawAfter(seconds, rate = 7) {
+  return seconds * rate;    // return is required
+}
+```
+:::
+
+::: {.content-hidden when-format="revealjs"}
+The same function as an **arrow function**:
+
+```js
+const thawAfter = (seconds, rate = 7) => seconds * rate;
+```
+
+(In the console, give it a new name or reload the page first: a name can only be declared once.)
+
+Arrow functions are the short form, and the one you'll use most, especially for little functions you pass to something else: `thaw.filter((t) => t > 50)`. With one expression and no braces, the value is returned for you. With braces, you need `return`.
+
+JavaScript names use camelCase (`thawAfter`), not snake_case.
+:::
+
+## Loops and conditions
+
+```js
+for (const t of thaw) {
+  if (t >= 100) {
+    console.log('thawed');
+  } else if (t >= 75) {
+    console.log('warning');
+  }
+}
+
+for (let i = 0; i < 3; i++) { /* i is 0, 1, 2 */ }
+
+const label = carrying ? 'THAW' : 'GET SAMPLE';   // ifelse() in one line
+```
+
+::: {.content-hidden when-format="revealjs"}
+`for ... of` loops over the values of an array. (There's also `for ... in`, which loops over *keys*. You rarely want it.)
+:::
+
+## Classes
+
+Every scene and every game object in Phaser is a class. A class is a template for objects that carry their own data and their own functions (**methods**).
+
+```js
+class Sample {
+  constructor(id) {           // runs when you write `new Sample(...)`
+    this.id = id;             // `this` is the object being made
+    this.thaw = 0;
+  }
+
+  warm(seconds) {             // a method: no `function` keyword
+    this.thaw += seconds * 7;
+    return this.thaw >= 100;  // true if it thawed
+  }
+}
+
+const s = new Sample('HCT116-rep1');
+s.warm(10);   // false
+s.thaw;       // 70
+```
+
+::: {.content-hidden when-format="revealjs"}
+R has several class systems (S3, S4, R6); this is closest to R6. In Python it's an ordinary class, with `this` instead of `self`, and you don't list `this` as an argument.
+:::
+
+## Extending a class
+
+`extends` makes a new class from an existing one. `super(...)` runs the parent's constructor, and has to come first.
+
+```js
+import Phaser from 'phaser';
+
+export class Play extends Phaser.Scene {
+  constructor() {
+    super('Play');      // run Phaser.Scene's constructor, with the key 'Play'
+  }
+
+  create() {            // your version of a method Phaser.Scene already has
+    this.add.text(16, 16, 'Hello');
+  }
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+This is the shape of every scene in the course. `Phaser.Scene` already knows how to load files, run the loop and draw; you **extend** it and fill in `preload`, `create` and `update`. Because `Play` *is* a `Phaser.Scene`, `this` inside its methods has everything a scene has: `this.add`, `this.load`, `this.physics`, `this.scale`.
+:::
+
+## The one thing about `this`
+
+Inside a method, `this` is the object. But a function you pass to someone else gets **their** `this`, not yours. Arrow functions are the exception: they keep the `this` of the place they were written.
+
+```js
+create() {
+  this.stored = 0;
+
+  this.time.delayedCall(1000, () => {
+    this.stored += 1;     // arrow: `this` is still the scene ✓
+  });
+
+  this.time.delayedCall(1000, function () {
+    this.stored += 1;     // regular function: `this` is something else ✗
+  });
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+That's the whole rule, and it's the source of more beginner bugs than anything else in JavaScript. When you pass a function to Phaser, use an arrow function. When you pass a method (`this.pickUp`), Phaser usually lets you say what `this` should be as an extra argument, which is why lesson 4 has lines like:
+
+```js
+this.physics.add.overlap(this.player, this.sample, this.pickUp, null, this);
+//                                                                   ^ `this` inside pickUp
+```
+:::
+
+## Modules: one file, one job
+
+Each file is a module. It **exports** what other files may use and **imports** what it needs.
+
+```js
+// src/save.js
+export function loadBestTime() { /* ... */ }
+export function saveBestTime(ms) { /* ... */ }
+```
+
+```js
+// src/scenes/Results.js
+import Phaser from 'phaser';                          // a package, from node_modules
+import { loadBestTime, saveBestTime } from '../save.js'; // a file of yours: path, with .js
+```
+
+::: {.content-hidden when-format="revealjs"}
+`import Phaser from 'phaser'` takes the package's **default** export and calls it `Phaser`. The braces in `{ loadBestTime }` take **named** exports, by name. It's like `library()` and `from x import y`, except that every name is explicit, so you can always find where something came from.
+:::
+
+## npm and Vite
+
+| | R | Python | JavaScript |
+|---|---|---|---|
+| Install packages | `install.packages()` | `pip install` | `npm install` |
+| The project's dependencies | `DESCRIPTION`, `renv.lock` | `requirements.txt`, `pyproject.toml` | `package.json`, `package-lock.json` |
+| Where packages go | your R library | `site-packages` | `node_modules/`, in the project |
+| Run a project script | | | `npm run dev`, `npm run build` |
+
+::: {.content-hidden when-format="revealjs"}
+`npm install` reads `package.json` and puts Phaser and Vite in `node_modules/`, inside the project. Every project has its own copy, a bit like an `renv` library. Never commit `node_modules/`.
+
+**Vite** is the tool behind `npm run dev`. It serves your game to the browser, follows your `import`s, and reloads the page when you save a file. In lesson 10, `npm run build` uses it to bundle everything into a few files you can put on any web server.
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 1.1: Predict it — what changes?" .exercise #ex-1.1}
+Which of these lines throw an error? Decide, then try them in the console, in order.
+
+```js
+const cart = { speed: 110 };
+cart.speed = 140;
+cart = { speed: 90 };
+let thaw = [10, 20];
+thaw.push(30);
+const total = thaw.reduce((sum, t) => sum + t, 0);
+```
+
+What is `total`?
+
+[Answer](../answers/01-javascript-answers.qmd#ex-1.1)
+:::
+
+::: {.callout-tip title="Exercise 1.2: Translate it" .exercise #ex-1.2}
+Rewrite this in JavaScript, in one line. `samples` is an array of objects like `{ id: 'A', thaw: 40 }`.
+
+::: {.panel-tabset group="language"}
+## R
+```r
+purrr::map_chr(purrr::keep(samples, ~ .x$thaw < 50), "id")
+```
+## Python
+```python
+[s["id"] for s in samples if s["thaw"] < 50]
+```
+:::
+
+[Answer](../answers/01-javascript-answers.qmd#ex-1.2)
+:::
+
+::: {.callout-tip title="Exercise 1.3: Build it — a freezer box" .exercise #ex-1.3}
+In the console, write a class `FreezerBox` that:
+
+- is made with a capacity: `new FreezerBox(81)`
+- has a method `store(id)` that adds a sample ID and returns `true`, or returns `false` if the box is full
+- has a method `free()` that returns how many spaces are left
+
+[Answer](../answers/01-javascript-answers.qmd#ex-1.3)
+:::
+
+::: {.callout-tip title="Exercise 1.4: Spot the bug — the counter that never counts" .exercise #ex-1.4}
+This scene should show "Stored: 1" after one second. It stays at "Stored: 0", and the console has no errors. Why?
+
+```js
+create() {
+  this.stored = 0;
+  this.label = this.add.text(16, 16, 'Stored: 0');
+
+  this.time.delayedCall(1000, function () {
+    this.stored += 1;
+  });
+}
+
+update() {
+  this.label.setText(`Stored: ${this.stored}`);
+}
+```
+
+[Answer](../answers/01-javascript-answers.qmd#ex-1.4)
+:::
+
+## Key points
+
+- `const` by default, `let` when it changes, never `var`. `===`, never `==`.
+- Arrays count from 0. Use `map`, `filter` and `forEach`.
+- Objects are named lists or dicts. Destructuring unpacks them: `const { width, height } = this.scale`.
+- Every scene is a class that `extends Phaser.Scene`. `this` inside its methods is the scene.
+- Pass arrow functions to Phaser, so `this` stays the scene.
+- `import` and `export` connect files. `npm install` fills `node_modules/`, and Vite serves the game.
 
 **Next:** [Lesson 2: Your first scene](02-first-scene.qmd)

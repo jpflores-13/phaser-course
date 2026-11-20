@@ -1,0 +1,99 @@
+---
+title: "Module 1 answers"
+subtitle: "JavaScript for R and Python people"
+---
+
+Back to [Module 1](../lessons/01-javascript.qmd).
+
+## Exercise 1.1: Predict it — what changes? {#ex-1.1}
+
+Only the third line throws:
+
+```js
+const cart = { speed: 110 };
+cart.speed = 140;            // fine
+cart = { speed: 90 };        // TypeError: Assignment to constant variable.
+let thaw = [10, 20];
+thaw.push(30);               // fine
+const total = thaw.reduce((sum, t) => sum + t, 0);   // 60
+```
+
+`const` stops the **name** from pointing at something new. It doesn't freeze what the name points at, so you can change `cart.speed` or push onto an array held in a `const`. This is why Phaser code is full of `const`: you rarely reassign a sprite, but you change its properties all the time.
+
+`reduce` walks the array carrying a running value: it starts at `0`, then `0 + 10`, `10 + 20`, `30 + 30`. It's `Reduce()` in R and `functools.reduce` in Python.
+
+## Exercise 1.2: Translate it {#ex-1.2}
+
+```js
+samples.filter((s) => s.thaw < 50).map((s) => s.id);
+```
+
+Read it left to right, like a pipe: keep the samples under 50, then take each one's `id`. Chaining `filter` and `map` is the JavaScript version of `|>` or `%>%`.
+
+To try it:
+
+```js
+const samples = [{ id: 'A', thaw: 40 }, { id: 'B', thaw: 80 }, { id: 'C', thaw: 10 }];
+samples.filter((s) => s.thaw < 50).map((s) => s.id);   // ['A', 'C']
+```
+
+## Exercise 1.3: Build it — a freezer box {#ex-1.3}
+
+```js
+class FreezerBox {
+  constructor(capacity) {
+    this.capacity = capacity; // <1>
+    this.samples = [];
+  }
+
+  store(id) {
+    if (this.samples.length >= this.capacity) return false; // <2>
+    this.samples.push(id);
+    return true;
+  }
+
+  free() {
+    return this.capacity - this.samples.length;
+  }
+}
+```
+1. Everything the object needs to remember goes on `this` in the constructor. A plain `let capacity` here would vanish when the constructor finished.
+2. An early `return` keeps the normal case unindented. Same as you'd write it in R or Python.
+
+```js
+const box = new FreezerBox(2);
+box.store('A');   // true
+box.store('B');   // true
+box.store('C');   // false
+box.free();       // 0
+```
+
+If you wrote `store(id) { samples.push(id) }` and got `ReferenceError: samples is not defined`, you met the most common class bug: inside a method, the object's own data is always `this.something`.
+
+## Exercise 1.4: Spot the bug — the counter that never counts {#ex-1.4}
+
+The callback is a regular `function`, so inside it `this` isn't the scene.
+
+Phaser calls timer callbacks with `this` set to the **timer event** itself, unless you tell it otherwise. So `this.stored += 1` adds 1 to a `stored` property on the timer, which doesn't exist: `undefined + 1` is `NaN`, and JavaScript doesn't treat that as an error. The scene's own `this.stored` never changes, so `update()` keeps drawing 0.
+
+That's what makes `this` bugs hard: often nothing breaks, the wrong object just quietly gets the change. To check, log `this` inside the callback:
+
+```js
+this.time.delayedCall(1000, function () {
+  console.log(this);   // TimerEvent {...}, not Play {...}
+});
+```
+
+Either fix works. Prefer the first:
+
+```js
+// 1. an arrow function keeps the scene's `this`
+this.time.delayedCall(1000, () => {
+  this.stored += 1;
+});
+
+// 2. tell Phaser what `this` should be (the fourth argument)
+this.time.delayedCall(1000, function () {
+  this.stored += 1;
+}, [], this);
+```
