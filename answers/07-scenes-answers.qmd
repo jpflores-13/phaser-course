@@ -1,0 +1,90 @@
+---
+title: "Module 7 answers"
+subtitle: "Scenes and state"
+---
+
+Back to [Module 7](../lessons/07-scenes.qmd).
+
+## Exercise 7.1: Build it — pause {#ex-7.1}
+
+A new scene that draws an overlay and waits for a key:
+
+```js
+export class Pause extends Phaser.Scene {
+  constructor() {
+    super('Pause');
+  }
+
+  create() {
+    const { width, height } = this.scale;
+    this.add.rectangle(0, 0, width, height, 0x0f172a, 0.7).setOrigin(0); // <1>
+    this.add.text(width / 2, height / 2 - 20, 'PAUSED', { /* ... */ }).setOrigin(0.5);
+
+    const resume = () => {
+      this.scene.resume('Play'); // <2>
+      this.scene.stop();
+    };
+    this.input.keyboard.once('keydown-P', resume);
+    this.input.keyboard.once('keydown-ESC', resume);
+  }
+}
+```
+1. A see-through rectangle over the whole screen. Because `Pause` is listed last in the config, it draws on top of `Play` and `Hud`.
+2. `resume` the game, then `stop` the overlay itself.
+
+And in `Play.create()`:
+
+```js
+const pause = () => {
+  if (this.finished) return; // <1>
+  this.scene.pause(); // <2>
+  this.scene.launch('Pause'); // <3>
+};
+this.input.keyboard.on('keydown-P', pause);
+this.input.keyboard.on('keydown-ESC', pause);
+```
+1. No pausing on the way to the results screen.
+2. A paused scene stops running `update()`, its physics, its timers and its tweens. Thaw, carts and the clock (which `Play` counts) all freeze. The HUD keeps running, but it only redraws when the registry changes, so it freezes too.
+3. `launch`, not `start`: `start` would stop `Play`, and there'd be nothing to resume.
+
+Remember to add `Pause` to the scene list in `main.js`.
+
+{{< game solutions/07/ex-7.1 caption="Press space, then P to pause." >}}
+
+The full code is in `solutions/07/ex-7.1/`.
+
+## Exercise 7.2: Predict it — reset in the wrong place {#ex-7.2}
+
+Floor 2 ends after **one** delivery.
+
+The constructor runs once, when the game starts. `restart` doesn't make a new `Play`; it runs `init()` and `create()` again on the same object. So `this.delivered` is still 3 from floor 1. The first delivery on floor 2 makes it 4, and `4 >= 3` sends you straight to the results.
+
+It gets stranger on a second game: the title screen starts the same `Play` again, so `delivered` begins at 4 or more and every delivery "finishes" the floor.
+
+This is why every value that belongs to one run of a scene is set in `init()`.
+
+## Exercise 7.3: Spot the bug — the pause that ate the lab {#ex-7.3}
+
+`this.scene.start('Pause')` means "this scene is done: stop it, and start `Pause`". So pressing **P** **shuts down** `Play`: its world, its physics and its game objects are all thrown away. That's why the lab vanishes. The HUD survives because it's a separate scene that nobody stopped, still showing the last values in the registry.
+
+`resume('Play')` can only carry on a scene that was *paused*. There's nothing left of this one to resume, so the screen stays dark and the clock never moves again.
+
+Pause the game and run the overlay **alongside** it:
+
+```js
+this.input.keyboard.on('keydown-P', () => {
+  this.scene.pause();          // freeze Play where it is
+  this.scene.launch('Pause');  // and run Pause on top
+});
+```
+
+The rule of thumb: `start` for "go to another screen", `launch` for "show something on top". Exercise 7.1 has the full pause screen.
+
+## Exercise 7.4: Sort it — where does it live? {#ex-7.4}
+
+1. **Score across floors, shown in the HUD**: passed through `init` (like `time`) so it survives the restart, *and* set in the registry so the HUD can show it.
+2. **Tutorial finished**: `localStorage`. It has to outlive the page.
+3. **Speed bonus length**: `tuning.js`. It's a design number you'll want to tweak, not something that changes during play.
+4. **Slipping right now**: `Play`, and only for this frame. *Cold Chain* doesn't even store it: `update()` asks physics each frame (`this.physics.overlap(this.player, this.spills)`) and passes the answer straight to `walk()`.
+
+The fourth one is a good habit: if a value can be worked out from the world each frame, don't store it. Stored state can go stale; a fresh question can't.

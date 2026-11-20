@@ -1,7 +1,6 @@
 ---
 title: "Game feel"
 subtitle: "Tweens, particles, shake and hit-stop: the difference between working and fun."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,234 @@ format:
 - Emit particles, once and continuously.
 - Add camera shake and hit-stop, and know when to stop.
 :::
+
+## Same game, different feel
+
+Play this with everything switched on, then switch things off one at a time. The rules don't change at all.
+
+{{< game stopping-points/stopE id="feel-game" caption="Pick up a sample, get hit by a cart, store it. Then switch things off." >}}
+
+{{< tuning target="feel-game" switches="feel.tweens, feel.particles, feel.shake" sliders="feel.hitStopMs:0:300:10" >}}
+
+::: {.content-hidden when-format="revealjs"}
+With everything off, *Cold Chain* still works, and it's noticeably worse. Getting hit feels like nothing happened. Storing a sample feels like ticking a box. Designers call this **game feel**, or **juice**: small, fast, physical responses that make actions feel like they matter.
+
+Almost all of it is built from four tools: tweens, timers, particles and the camera.
+:::
+
+## Tweens
+
+A **tween** changes a property smoothly, from where it is to where you say, over a duration.
+
+```js
+this.tweens.add({
+  targets: this.carried,     // any game object, or a list of them
+  scale: { from: 1.8, to: 1 }, // any numeric property: x, y, alpha, angle, scale...
+  duration: 250,             // milliseconds
+  ease: 'Back.Out',          // how it gets there
+});
+```
+
+::: {.content-hidden when-format="revealjs"}
+That's the pop when you pick up a sample: the tube appears big and settles to its normal size. A few more options cover most uses:
+
+- `yoyo: true` plays it forwards, then backwards.
+- `repeat: -1` loops forever (with `yoyo`, a pulse).
+- `delay: 200` waits before starting.
+- `onComplete: () => ...` runs when it's done.
+
+Tweens work on *any* numeric property of *any* object, including your own: `this.tweens.add({ targets: this, thaw: 0, duration: 500 })` would drain the thaw meter smoothly.
+:::
+
+## Eases
+
+An **ease** decides *how* a tween travels: steady, fast then slow, overshooting, bouncing.
+
+```{ojs}
+//| echo: false
+viewof ease = Inputs.radio(["Linear", "Quad.Out", "Cubic.Out", "Back.Out", "Bounce.Out", "Elastic.Out", "Sine.InOut"], {value: "Back.Out", label: "ease"})
+```
+
+```{ojs}
+//| echo: false
+easeFns = ({
+  "Linear": t => t,
+  "Quad.Out": t => 1 - (1 - t) * (1 - t),
+  "Cubic.Out": t => 1 - Math.pow(1 - t, 3),
+  "Back.Out": t => { const s = 1.70158; return 1 + (s + 1) * Math.pow(t - 1, 3) + s * Math.pow(t - 1, 2); },
+  "Bounce.Out": t => {
+    const n = 7.5625, d = 2.75;
+    if (t < 1 / d) return n * t * t;
+    if (t < 2 / d) return n * (t -= 1.5 / d) * t + 0.75;
+    if (t < 2.5 / d) return n * (t -= 2.25 / d) * t + 0.9375;
+    return n * (t -= 2.625 / d) * t + 0.984375;
+  },
+  "Elastic.Out": t => t === 0 || t === 1 ? t : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * (2 * Math.PI) / 3) + 1,
+  "Sine.InOut": t => -(Math.cos(Math.PI * t) - 1) / 2,
+})
+```
+
+```{ojs}
+//| echo: false
+{
+  const f = easeFns[ease];
+  const W = 640, H = 300, pad = 40;
+  const x = t => pad + t * (W - 2 * pad);
+  const y = v => H - pad - v * (H - 2.6 * pad);
+  const pts = d3.range(0, 1.0001, 0.01).map(t => [x(t), y(f(t))]);
+  const svg = d3.create("svg").attr("viewBox", `0 0 ${W} ${H}`)
+    .style("width", "100%").style("max-width", "640px")
+    .style("background", "#d8dee6").style("border-radius", "6px");
+  svg.append("line").attr("x1", x(0)).attr("x2", x(1)).attr("y1", y(1)).attr("y2", y(1))
+    .attr("stroke", "#94a3b8").attr("stroke-dasharray", "4 4");
+  svg.append("line").attr("x1", x(0)).attr("x2", x(1)).attr("y1", y(0)).attr("y2", y(0)).attr("stroke", "#94a3b8");
+  svg.append("path").attr("d", d3.line()(pts)).attr("fill", "none").attr("stroke", "#0e7490").attr("stroke-width", 4);
+  svg.append("text").attr("x", x(0)).attr("y", H - 12).attr("font-family", "monospace").attr("font-size", 14).text("start");
+  svg.append("text").attr("x", x(1) - 30).attr("y", H - 12).attr("font-family", "monospace").attr("font-size", 14).text("end");
+  const dot = svg.append("circle").attr("r", 9).attr("fill", "#dc2626");
+  const box = svg.append("rect").attr("x", W - 28).attr("width", 16).attr("height", 16).attr("fill", "#0e7490");
+  const node = svg.node();
+  let start = performance.now();
+  (function frame(now) {
+    if (!node.isConnected && performance.now() - start > 2000) return;
+    const t = ((now - start) % 1600) / 1200;
+    const p = Math.min(t, 1);
+    dot.attr("cx", x(p)).attr("cy", y(f(p)));
+    box.attr("y", y(f(p)) - 8);
+    requestAnimationFrame(frame);
+  })(start);
+  return node;
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+The curve shows progress (up) against time (along). The square on the right moves the way an object would.
+
+- **`.Out`** eases start fast and slow down at the end. They feel *responsive*, so they're the default for anything the player caused.
+- **`.In`** eases start slow and speed up: things falling, leaving, being sucked away.
+- **`Back.Out`** overshoots a little and settles: a pop, a bounce of life. *Cold Chain*'s pickup.
+- **`Linear`** feels mechanical. Good for timers and progress bars, odd for anything physical.
+:::
+
+## Timers
+
+```js
+this.time.delayedCall(450, () => this.freezer.setFrame(0));   // once, later
+
+this.time.addEvent({ delay: 1000, loop: true, callback: () => this.tick() }); // every second
+```
+
+::: {.content-hidden when-format="revealjs"}
+Use the scene's clock (`this.time`), not `setTimeout`. Scene timers pause when the scene pauses, stop when it stops, and run on game time. A `setTimeout` keeps going after the player pauses, and fires into a scene that may no longer exist.
+:::
+
+## Particles
+
+A **particle emitter** spawns lots of short-lived images: frost, sparks, dust, smoke.
+
+{{< snippet file="stopping-points/stopE/src/scenes/Play.js" lines="86-103" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Two emitters, two ways of using them:
+
+- The **trail** is continuous. It follows the researcher (`startFollow`) and emits one frost flake every 80 ms. `start()` when you pick up a sample, `stop()` when you store it.
+- The **burst** never emits on its own (`emitting: false`). `this.burst.explode(24, x, y)` throws 24 flakes out at once, at the freezer or the dry ice.
+
+Values like `{ min: 5, max: 30 }` pick a random number for each particle; `{ start: 0.9, end: 0 }` changes it over the particle's life. Random and changing is what makes particles look natural.
+:::
+
+## The camera
+
+```js
+this.cameras.main.shake(140, 0.006);    // duration, intensity
+this.cameras.main.flash(150, 255, 80, 80); // duration, red, green, blue
+this.cameras.main.fadeOut(500);         // and fadeIn: between floors
+```
+
+::: {.content-hidden when-format="revealjs"}
+Shake intensity is a fraction of the screen size: 0.006 is gentle, 0.02 is violent. Keep it short. Long shakes are tiring and, for some people, nauseating.
+:::
+
+## Getting hit
+
+All of it together, in one collision:
+
+{{< snippet file="stopping-points/stopE/src/scenes/Play.js" method="bump" >}}
+
+::: {.content-hidden when-format="revealjs"}
+- **Knockback**: you're thrown away from the cart, so the hit has a direction.
+- **Sound** and a red **tint**, cleared after 150 ms.
+- **Shake**, if switched on.
+- **Hit-stop**: the physics freezes for 70 ms. You barely notice it consciously, but it makes impacts feel heavy, as if the game flinched. Fighting games are built on it.
+- **Blinking**: a tween on `alpha` while you can't be hit again, so you know you're safe for a moment.
+
+Every one of those is a response to the player's question "what just happened?".
+:::
+
+::: {.callout-warning title="Phaser 3 habit" .phaser3}
+Phaser 3 tutorials flash a hit sprite white with `sprite.setTintFill(0xffffff)`. In Phaser 4 that method still exists but does nothing. Use `sprite.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL)`, and `clearTint()` to undo it.
+:::
+
+## Words that move
+
+{{< snippet file="stopping-points/stopE/src/scenes/Play.js" method="floatText" >}}
+
+::: {.content-hidden when-format="revealjs"}
+"2 / 3" floating up from the freezer, "COLDER" from the dry ice, "THAWED" when you lose. A text, a tween up and out, and `destroy()` when it's done so you don't leave thousands of invisible texts behind.
+:::
+
+## When to stop
+
+- **Feedback should match importance.** Storing a sample gets a shake; picking one up doesn't.
+- **Never hide information.** Particles behind the HUD, a shake while you're trying to aim: juice that gets in the way is worse than none.
+- **Let people turn it down.** Screen shake and flashing can make people unwell. A setting to switch them off (like `tuning.feel`) is cheap and kind.
+
+## Exercises
+
+::: {.callout-tip title="Exercise 9.1: Build it — footstep dust" .exercise #ex-9.1}
+Add little grey puffs at the researcher's feet while they walk, and none while they stand still or slide on a spill.
+
+[Answer](../answers/09-feel-answers.qmd#ex-9.1)
+:::
+
+::: {.callout-tip title="Exercise 9.2: Predict it — pick the ease" .exercise #ex-9.2}
+Which ease would you use for each? Check with the explorer above.
+
+1. The freezer door slamming shut.
+2. A "GAME OVER" title dropping into place from the top of the screen.
+3. The thaw meter filling up.
+4. A coin popping out of a box.
+
+[Answer](../answers/09-feel-answers.qmd#ex-9.2)
+:::
+
+::: {.callout-tip title="Exercise 9.3: Spot the bug — the flicker that ate the frame rate" .exercise #ex-9.3}
+A labmate wanted the thaw meter to pulse when it's nearly full. After a few seconds of danger, the meter flickers wildly and the game slows to a crawl. Their HUD code:
+
+```js
+redraw() {
+  // ...
+  if (thaw >= 75) {
+    this.tweens.add({ targets: this.bar, alpha: 0.35, duration: 180, yoyo: true, repeat: -1 });
+  }
+}
+```
+
+[Answer](../answers/09-feel-answers.qmd#ex-9.3)
+:::
+
+::: {.callout-tip title="Exercise 9.4: Tune it — how heavy is a hit?" .exercise #ex-9.4}
+With the slider above, try hit-stop at 0, 70 and 300 ms, getting hit by a cart each time. Then try the shake at intensity 0.003 and 0.03 in `bump()`. What's too much?
+
+[Answer](../answers/09-feel-answers.qmd#ex-9.4)
+:::
+
+## Key points
+
+- Game feel is fast, physical feedback. It doesn't change the rules, but it changes everything.
+- A tween animates any number, with an ease. `.Out` eases feel responsive.
+- Use the scene clock (`this.time`), not `setTimeout`.
+- Particle emitters run continuously (`start`, `stop`) or in bursts (`explode`).
+- Shake, flash and hit-stop make impacts land. Match them to importance, and let players turn them off.
 
 **Next:** [Lesson 10: Phones, saves and shipping](10-ship.qmd)

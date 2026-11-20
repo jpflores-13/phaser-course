@@ -1,7 +1,6 @@
 ---
 title: "Scenes and state"
 subtitle: "Split the game into a title, a level, a HUD and a results screen."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,186 @@ format:
 - Pass data between scenes with `start(key, data)` and the registry.
 - Decide where a piece of game state should live.
 :::
+
+## Where you start
+
+[Stopping point D](06-worlds.qmd#what-you-have) is one scene that does everything: loads files, builds the world, runs the rules, and draws the counter. It starts the moment the page loads, and there's no way to win, lose, or play again.
+
+A real game is several screens. In Phaser each one is a **scene**, and Day 3 turns *Cold Chain* into five of them.
+
+## The five scenes
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+  B["Boot<br/>load everything"] --> T["Title<br/>press space"]
+  T -->|start + launch| P["Play<br/>one floor"]
+  T -.-> H["HUD<br/>on top of Play"]
+  P -->|restart| P
+  P -->|start| R["Results<br/>won or thawed"]
+  R -->|start| T
+```
+
+| Scene | Job | Runs |
+|---|---|---|
+| `Boot` | Load every file, make the animations, show a progress bar | once |
+| `Title` | Name, controls, best time; wait for a key | between games |
+| `Play` | One floor of the lab: the world, the rules | during a game |
+| `Hud` | The thaw meter, deliveries, floor and clock | on top of `Play` |
+| `Results` | Won or lost, the time, the best time | after a game |
+
+::: {.content-hidden when-format="revealjs"}
+Every scene is a class in `src/scenes/`, and all five are listed in the game config. The first in the list, `Boot`, starts on its own:
+:::
+
+{{< snippet file="stopping-points/stopE/src/main.js" lines="1-31" >}}
+
+## Moving between scenes
+
+Inside a scene, `this.scene` controls all of them.
+
+| Call | What it does |
+|---|---|
+| `this.scene.start('Play', data)` | Stop **this** scene, start `Play` |
+| `this.scene.launch('Hud')` | Start `Hud` **as well**; this scene keeps running |
+| `this.scene.restart(data)` | Stop this scene and start it again from `init()` |
+| `this.scene.stop('Hud')` | Stop `Hud` |
+| `this.scene.pause()` / `resume()` | Freeze a scene in place, then carry on |
+
+::: {.content-hidden when-format="revealjs"}
+`start` vs `launch` is the one to remember. `start` *replaces* the current scene; `launch` *adds* one. Mixing them up is the most common scene bug (exercise 7.3).
+:::
+
+## Boot: load once
+
+{{< snippet file="stopping-points/stopE/src/scenes/Boot.js" method="create" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Everything is loaded in `Boot.preload()` (with the progress bar from [lesson 5](05-assets.qmd#show-progress)), and the animations are made here. Textures, sounds and animations belong to the **game**, not the scene, so every later scene can use them without loading anything. Then `Boot` hands over to `Title` and is never seen again.
+:::
+
+## Title: start the game
+
+{{< snippet file="stopping-points/stopE/src/scenes/Title.js" lines="61-67" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Two calls: `start` replaces the title with `Play`, and `launch` runs `Hud` alongside it. Scenes draw in the order they're listed in the config, so `Hud` (listed after `Play`) draws on top.
+
+`once` instead of `on` means the key only starts the game one time, even if it's pressed again before the scene changes. The click also unlocks the sound ([lesson 5](05-assets.qmd#the-autoplay-rule)).
+:::
+
+## Passing data in
+
+The second argument of `start` arrives in the new scene's `init(data)`, which runs before `create()`.
+
+{{< snippet file="stopping-points/stopE/src/scenes/Play.js" method="init" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`Play` is one floor. To go to floor 2, it **restarts itself** with new data, carrying the elapsed time over:
+
+```js
+this.scene.restart({ floor: next, time: this.elapsed });
+```
+
+That's why everything is reset in `init()`, not in the constructor. The constructor runs once, when the game starts. `init()` runs every time the scene starts, including restarts (exercise 7.2).
+:::
+
+## The registry: shared data
+
+The HUD needs to show what's happening in `Play`. It could reach into `Play` (`this.scene.get('Play').thaw`), but then the two are tied together. Instead, `Play` writes to the **registry**, a store shared by every scene:
+
+{{< snippet file="stopping-points/stopE/src/scenes/Play.js" lines="111-119" >}}
+
+::: {.content-hidden when-format="revealjs"}
+and updates it as things change: `this.registry.set('thaw', this.thaw)`. The registry fires an event on every change, and the HUD listens:
+:::
+
+{{< snippet file="stopping-points/stopE/src/scenes/Hud.js" lines="26-27" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`Play` doesn't know the HUD exists. You could delete the HUD, or add a second one for a co-op mode, without touching `Play`. That's the payoff for one extra line.
+
+The second line matters. The registry outlives scenes, so a listener added by the HUD stays attached after the HUD stops, unless you remove it. On the next game, the old listener would try to redraw text that no longer exists. Clean up everything you attach to something longer-lived than your scene, in a `shutdown` handler.
+:::
+
+## Where should this live?
+
+| State | Lives in | Because |
+|---|---|---|
+| Thaw, carrying, delivered on this floor | `Play` (`this.thaw`) | Only this floor needs it |
+| Floor number, elapsed time | passed to `Play` in `init(data)` | It carries over to the next floor |
+| What the HUD shows | the registry | More than one scene reads it |
+| Best time | `localStorage` (lesson 10) | It outlives the page |
+| Thaw rate, cart speeds | `tuning.js` (lesson 8) | It's design, not state |
+
+::: {.content-hidden when-format="revealjs"}
+A useful test: *when should this be reset?* Every floor → the scene. Every game → passed through `init`. Never → saved. If you can't answer, that's usually the bug.
+:::
+
+## Results, and round again
+
+{{< snippet file="stopping-points/stopE/src/scenes/Results.js" method="init" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`Play.finish()` stops the HUD and starts `Results` with the outcome. `Results` saves a best time (lesson 10) and waits half a second before listening for a key, so the key you were holding when the sample thawed doesn't skip the screen. Then it starts `Title`, and the loop is closed.
+:::
+
+## What you have
+
+{{< game stopping-points/stopE caption="The finished structure: title, play with a HUD on top, results, and round again." >}}
+
+::: {.content-hidden when-format="revealjs"}
+This is stopping point E, the finished game. Lessons 8, 9 and 10 explain the rest of what's in it: the rules, the polish, and the phone support. If you're building as you go, copy the five scene files from `stopping-points/stopE/src/scenes/` and carry on.
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 7.1: Build it — pause" .exercise #ex-7.1}
+Add a `Pause` scene. Pressing **P** or **Esc** during a game freezes everything (carts, thaw, the clock) and shows "PAUSED" over the game. Pressing either key again carries on.
+
+[Answer](../answers/07-scenes-answers.qmd#ex-7.1)
+:::
+
+::: {.callout-tip title="Exercise 7.2: Predict it — reset in the wrong place" .exercise #ex-7.2}
+You move `this.delivered = 0;` from `init()` into the constructor of `Play`. What happens on floor 2?
+
+[Answer](../answers/07-scenes-answers.qmd#ex-7.2)
+:::
+
+::: {.callout-tip title="Exercise 7.3: Spot the bug — the pause that ate the lab" .exercise #ex-7.3}
+A labmate added a pause screen. When they press **P**, the whole lab vanishes: only "PAUSED" and the HUD are left, on a dark screen. Pressing **P** again removes "PAUSED", but the lab never comes back and the clock stays frozen. Their code:
+
+```js
+// in Play.create()
+this.input.keyboard.on('keydown-P', () => this.scene.start('Pause'));
+
+// in Pause.create()
+this.input.keyboard.once('keydown-P', () => {
+  this.scene.resume('Play');
+  this.scene.stop();
+});
+```
+
+[Answer](../answers/07-scenes-answers.qmd#ex-7.3)
+:::
+
+::: {.callout-tip title="Exercise 7.4: Sort it — where does it live?" .exercise #ex-7.4}
+You're adding three features to *Cold Chain*. For each piece of state, say where it should live: in `Play`, passed through `init`, in the registry, saved in `localStorage`, or in `tuning.js`.
+
+1. A score that adds up across both floors and shows in the HUD.
+2. Whether the player has finished the tutorial, so it's skipped next time.
+3. How many seconds a "speed bonus" lasts.
+4. Whether the researcher is currently slipping on a spill.
+
+[Answer](../answers/07-scenes-answers.qmd#ex-7.4)
+:::
+
+## Key points
+
+- Each screen is a scene. List them all in the config; the first one starts.
+- `start` replaces the current scene; `launch` runs another alongside it.
+- Data passed to `start` or `restart` arrives in `init(data)`. Reset per-run state there, never in the constructor.
+- Share data through the registry, and listen for `changedata`. Remove listeners on `shutdown`.
+- Ask *when should this reset?* to decide where state lives.
 
 **Next:** [Lesson 8: Game mechanics](08-mechanics.qmd)

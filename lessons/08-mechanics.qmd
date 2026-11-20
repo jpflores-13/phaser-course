@@ -1,7 +1,6 @@
 ---
 title: "Game mechanics"
 subtitle: "Turn a moving sprite into a game: verbs, goals, risk and difficulty."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,182 @@ format:
 - Design a risk and reward choice.
 - Pull every balance number into one tuning file, and tune it.
 :::
+
+## Working isn't the same as fun
+
+Lessons 2 to 7 were about **how** to make things happen. This one is about **what** should happen: the rules.
+
+Stopping point D *works*: you can walk, carry, store, and bump into carts. But there's no reason to hurry, nothing to decide, and no way to lose. It's a toy, not a game. Three things turn one into the other:
+
+- **a goal** you're trying to reach,
+- **an obstacle** between you and it,
+- **a choice** about how to get there.
+
+::: {.content-hidden when-format="revealjs"}
+This lesson is mostly design, with code only where the design turns into numbers. It's also the most useful lesson for your capstone: a game from your research will live or die on its mechanics, not its code.
+:::
+
+## Verbs, goals, obstacles
+
+A **verb** is what the player can do. A **goal** is what they want. An **obstacle** is what's in the way.
+
+| | *Cold Chain* | *Snail Assassin* |
+|---|---|---|
+| Verbs | walk, pick up, store | creep, hold still, strike |
+| Goal | store 3 samples on each floor, fast | capture 3 fish in 3 minutes |
+| Obstacles | thaw time, carts, spills | the octopus, wary fish, your own slowness |
+
+::: {.content-hidden when-format="revealjs"}
+Good games have few verbs, and use them in many situations. *Cold Chain* has essentially one verb, *walk*, and every interesting moment is about where and when you walk. *Snail Assassin* makes *holding still* a verb: its octopus chases a snail that moves, and is deliberately faster than the snail, so freezing is the only way out. Doing nothing becomes a decision.
+
+When a game feels flat, check the verbs first. If the player only ever does one thing in one situation, no amount of polish will help.
+:::
+
+## The core loop
+
+The **core loop** is the short thing the player does over and over. In *Cold Chain* it's about ten seconds long:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+  A["pick up a sample<br/>(the clock starts)"] --> B["get across the lab<br/>(carts, spills, dry ice?)"]
+  B --> C["store it<br/>(relief, one more cart)"]
+  C --> A
+```
+
+Longer loops wrap around it: **a floor** is three deliveries, **a run** is two floors, **a session** is "one more go at my best time".
+
+::: {.content-hidden when-format="revealjs"}
+*Snail Assassin*'s design document describes its core loop in four steps: sense, approach, strike, consume. Writing yours down in that form is the single most useful design exercise there is. If you can't, the game doesn't have one yet.
+
+Each pass through the loop should be slightly different, or it gets boring fast. In *Cold Chain* the differences come from where the dry ice appears, where the carts are, and how much thaw is left.
+:::
+
+## Risk and reward
+
+A real choice has a cost on both sides. *Cold Chain* has two:
+
+**Dry ice.** It knocks 40 off the thaw meter, but it's never on the way to the freezer. Every time you pick up a sample, you decide: take the detour, or go straight?
+
+**Spills.** They're slippery (low drag), but you also go faster on them (higher max speed). A shortcut you can't fully control.
+
+::: {.content-hidden when-format="revealjs"}
+The test of a risk and reward choice: would a good player sometimes take it and sometimes not? If the answer is "always" or "never", there's no decision, just a chore or a trap (exercises 8.2 and 8.3).
+
+The dry ice only appears once you're carrying a sample, at a random spot from the map's list. That keeps the choice fresh each loop: sometimes it's nearly on your way, sometimes it's across the room.
+:::
+
+## Feedback
+
+Every action needs an answer the player can see or hear, right away.
+
+| Action | Answer |
+|---|---|
+| Pick up | a blip, the tube pops above your head, the thaw meter appears |
+| Thaw rising | the meter fills and turns from blue to red |
+| Nearly thawed | a warning beep, the meter flashes |
+| Get hit | a thud, a flash of red, the screen shakes |
+| Store | a chime, the door opens, frost bursts out, "2 / 3" floats up |
+
+::: {.content-hidden when-format="revealjs"}
+Without feedback, players can't learn the rules, because they can't tell what happened or why. Every row on the right is lesson 9.
+:::
+
+## Difficulty
+
+*Cold Chain* gets harder in two ways:
+
+- **Within a floor**: every delivery adds a cart at one of the map's `cartspawn` points.
+- **Between floors**: floor 2 is bigger, with more walls between you and the freezer, and more carts from the start.
+
+::: {.content-hidden when-format="revealjs"}
+The first delivery on floor 1 is nearly free on purpose. The first 30 seconds of a game teach the controls and the goal; if the player fails before they understand what's going on, they blame the game and leave. Difficulty should rise as skill does.
+
+In *Snail Assassin*, the same job is done by a per-character tutorial checklist on each species' first hunt.
+:::
+
+## Tuning as data
+
+Every number above lives in one file. The scenes read them; they never contain them.
+
+{{< snippet file="stopping-points/stopE/src/tuning.js" >}}
+
+::: {.content-hidden when-format="revealjs"}
+This is the most practical habit in the lesson. When the numbers are scattered through the code (`if (this.thaw > 75)` in one file, `* 7` in another), you can't see the design, and every change is a hunt. In one file, it reads like a spec, and a non-programmer can tune the game.
+
+*Snail Assassin* does the same in `src/config/tuning.ts`. Its first comment is worth copying: the values were chosen for feel, not as biological measurements. That's a design decision, and saying so out loud is part of being honest about the science (below).
+:::
+
+## Tune it live
+
+Play the game below, and change the numbers while you play. The changes take effect immediately.
+
+{{< game stopping-points/stopE id="tuning-game" caption="Click the game, press space, and drag the sliders below." >}}
+
+{{< tuning target="tuning-game" sliders="thaw.perSecond:1:25:1, thaw.dryIceBonus:0:100:5, thaw.bumpPenalty:0:50:5, carts.speedScale:0.2:2.5:0.1, carts.extraPerDelivery:0:4:1, player.maxSpeed:80:400:10, player.drag:50:4000:50" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Try to find the edges: the thaw rate where you can't make it even with dry ice, the cart speed where dodging stops being possible, the drag where the researcher feels like they're on ice. The fun is usually in a narrow band between "boring" and "unfair". Tuning is finding that band.
+:::
+
+## Simplifying the science
+
+Every game from research simplifies. Samples don't thaw in 14 seconds, and a −80 doesn't open with a chime. That's fine, as long as you know what you changed and say so.
+
+::: {.content-hidden when-format="revealjs"}
+The Minus 80 Studios games handle this in two places. Most of them have a `SCIENCE.md` that records what's real, what's simplified and what's made up, and every proposed mechanic in *Snail Assassin*'s design document has a "science status" column that stays "to validate" until someone checks it. The studio's site says it plainly: the games are inspired by real research, and the gameplay simplifies the science.
+
+A good rule for your capstone: simplify the *numbers* and *timescales* freely, keep the *relationships* true. Venom slowing prey is the science; how many seconds it takes is game design.
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 8.1: Build it — a harder second floor" .exercise #ex-8.1}
+Give each floor its own thaw rate, set in `tuning.js`: 5 per second on floor 1, 9 on floor 2. If a floor doesn't set one, use `thaw.perSecond`.
+
+[Answer](../answers/08-mechanics-answers.qmd#ex-8.1)
+:::
+
+::: {.callout-tip title="Exercise 8.2: Predict it — free ice" .exercise #ex-8.2}
+You set `thaw.dryIceBonus` to 100. How does that change the way you play? What about 0? (Try both with the sliders above.)
+
+[Answer](../answers/08-mechanics-answers.qmd#ex-8.2)
+:::
+
+::: {.callout-tip title="Exercise 8.3: Spot the design bug — the ice on the way" .exercise #ex-8.3}
+A labmate moved all the `dryice` points in Tiled onto the straight path between the sample rack and the freezer, "so players don't miss them". Nothing crashes. What's wrong with the game now?
+
+[Answer](../answers/08-mechanics-answers.qmd#ex-8.3)
+:::
+
+::: {.callout-tip title="Exercise 8.4: Tune it — the narrow band" .exercise #ex-8.4}
+Using the sliders, find a setting that's too easy, one that's unfair, and one you'd ship. What did you change, and how did you know?
+
+[Answer](../answers/08-mechanics-answers.qmd#ex-8.4)
+:::
+
+::: {.callout-tip title="Exercise 8.5: Design it — an index card" .exercise #ex-8.5}
+For a game based on something from your own research, fill in an index card, no code:
+
+- **Verb** (one, maybe two):
+- **Goal**:
+- **Obstacle**:
+- **Core loop** (three or four steps):
+- **One risk and reward choice**:
+- **What you simplified**, and what stays true:
+
+Swap cards with someone and play each other's game in your heads. This is your capstone pitch.
+
+[Answer](../answers/08-mechanics-answers.qmd#ex-8.5)
+:::
+
+## Key points
+
+- A game needs a goal, an obstacle, and a choice. Without them it's a toy.
+- Few verbs, used in many situations. Doing nothing can be a verb.
+- Name your core loop. Each pass should be a little different.
+- A risk and reward choice is real only if good players sometimes take it and sometimes don't.
+- Every action needs feedback. Difficulty rises as skill does.
+- Keep every balance number in one tuning file, and simplify the science honestly.
 
 **Next:** [Lesson 9: Game feel](09-feel.qmd)

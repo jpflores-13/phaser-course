@@ -1,0 +1,87 @@
+---
+title: "Module 10 answers"
+subtitle: "Phones, saves and shipping"
+---
+
+Back to [Module 10](../lessons/10-ship.qmd).
+
+## Exercise 10.1: Build it — a mute key {#ex-10.1}
+
+The sound manager is shared by every scene, so `this.sound.mute = true` in any scene mutes the whole game. The catch is reading it back.
+
+```js
+// save.js
+const MUTE_KEY = 'cold-chain:muted';
+
+export function loadMuted() {
+  try {
+    return window.localStorage.getItem(MUTE_KEY) === 'true'; // <1>
+  } catch {
+    return false;
+  }
+}
+
+export function saveMuted(muted) {
+  try {
+    window.localStorage.setItem(MUTE_KEY, String(muted));
+  } catch {
+    // no storage: the setting just won't survive a reload
+  }
+}
+
+export function toggleMute(scene) {
+  const muted = !scene.registry.get('muted'); // <2>
+  scene.registry.set('muted', muted);
+  scene.sound.mute = muted;
+  saveMuted(muted);
+  return muted;
+}
+```
+1. `localStorage` gives back the string `'true'`, so compare with the string. `Boolean('false')` is `true`, which is a classic trap.
+2. The setting lives in the registry, not in `this.sound.mute`. Before the player's first click, the browser hasn't started audio, and reading `this.sound.mute` back still gives the *old* value. A toggle written as `this.sound.mute = !this.sound.mute` then saves the wrong thing, and it's easy to miss: once you've clicked anywhere, it works fine.
+
+Then:
+
+- **`Boot.create()`**: `this.registry.set('muted', loadMuted())` and `this.sound.mute = this.registry.get('muted')`.
+- **`Title.create()`**: a small label, and `this.input.keyboard.on('keydown-M', () => { toggleMute(this); showSound(); })`.
+- **`Hud.create()`**: `this.input.keyboard.on('keydown-M', () => toggleMute(this))`, so M works during play too.
+
+{{< game solutions/10/ex-10.1 caption="Press M on the title screen, then reload this page." >}}
+
+The full code is in `solutions/10/ex-10.1/`.
+
+## Exercise 10.2: Predict it — strings {#ex-10.2}
+
+```js
+localStorage.setItem('best', 14242);         // stored as the string '14242'
+const best = localStorage.getItem('best');   // '14242'
+typeof best;                                 // 'string'
+best + 1000;                                 // '142421000'  (joined, not added)
+best < 20000;                                // true         (< converts to a number)
+```
+
+`+` with a string joins text; `<` converts to numbers. So comparisons often *seem* to work, and the bug only appears when you do arithmetic. Convert once, right where you load: `Number(localStorage.getItem('best'))`, as `loadBestTime()` does.
+
+## Exercise 10.3: Spot the bug — blank on GitHub {#ex-10.3}
+
+The config has no `base`, so Vite uses `/`, and the built `index.html` asks for `/assets/index-Bq3x9Lk2.js`: from the **root** of `them.github.io`. But the game lives in the `their-game/` folder, so the real file is at `/their-game/assets/...`. One missing file, and the whole page is blank.
+
+It works locally because `npm run preview` serves the game at the root of `localhost`.
+
+```js
+export default defineConfig({
+  base: './',
+});
+```
+
+With `base: './'`, every path in the build is relative to the page, so the game works from the root, from a sub-folder, or embedded in another site (this course's pages embed every game that way).
+
+When a page is blank, the browser's **Console** and **Network** tabs nearly always say why in the first red line.
+
+## Exercise 10.4: Tune it — thumb room {#ex-10.4}
+
+- **Radius 30**: very sensitive. A tiny movement of the thumb is full speed in a new direction, so fine control is hard, and your thumb slides off the knob's range constantly.
+- **Radius 56**: about the width of a thumb's comfortable movement. Small drags walk slowly; a comfortable stretch is full speed.
+- **Radius 110**: you have to drag a long way to reach full speed, so it feels sluggish, and on a phone your thumb runs into the edge of the screen.
+
+A bigger radius feels slower because the speed is the drag distance divided by the radius: the same 30-pixel drag is about half speed at radius 56 and a quarter at 110. Real phones vary a lot in size and pixel density, so test on more than one, and on the smallest you can find.

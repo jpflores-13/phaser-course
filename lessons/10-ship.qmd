@@ -1,7 +1,6 @@
 ---
 title: "Phones, saves and shipping"
 subtitle: "Make the game work on a phone, remember a best time, and put it online."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,3 +17,243 @@ format:
 - Save and load with `localStorage`.
 - Build the game and deploy it to GitHub Pages.
 :::
+
+## Where you start
+
+*Cold Chain* works on your laptop, in your browser, at `localhost`. This lesson gets it onto other people's screens: phones, tablets, a link you can send to your PI.
+
+## Fit any screen
+
+Your game is 960 × 540 game pixels. The **Scale Manager** decides how that fits the window.
+
+{{< snippet file="stopping-points/stopE/src/main.js" lines="19-22" >}}
+
+| Mode | What happens | Good for |
+|---|---|---|
+| `NONE` | Exactly 960 × 540 CSS pixels, whatever the window | Embedding at a fixed size |
+| `FIT` | As big as fits, same shape, bars where it doesn't | Most games, including this one |
+| `ENVELOP` | Fills the window, same shape, edges cropped off | Backgrounds you don't mind losing |
+| `RESIZE` | The game becomes the size of the window | Games that can show more or less world |
+
+::: {.content-hidden when-format="revealjs"}
+`FIT` with `CENTER_BOTH` is the safe default: the game is never stretched or cropped, and your coordinates never change. The bars on the sides take the page's background colour, which is why `index.html` sets the body to the same dark blue as the game.
+
+`RESIZE` is the most work: the camera sees a different amount of the world on every screen, and every HUD position has to be worked out from `this.scale.width`. Worth it for some games; not for a first one.
+:::
+
+## Turn it sideways
+
+On a phone held upright, a 16:9 game is tiny. *Cold Chain*, like the Minus 80 Studios games, asks you to turn the phone instead, with plain CSS in `index.html`:
+
+{{< snippet file="stopping-points/stopE/index.html" lines="20-38" lang="css" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`pointer: coarse` means "the main input is a finger", so a narrow desktop window doesn't get the message. The game keeps running underneath; it's just hidden.
+
+Phaser can also tell you about orientation in code (`this.scale.on('orientationchange', ...)`), and lock it on Android in full screen. CSS is simpler and works everywhere.
+:::
+
+## Touch
+
+Phaser's **pointer** events work the same for a mouse and a finger: `pointerdown`, `pointermove`, `pointerup`. For a second finger at the same time, ask for it in the config (`input: { activePointers: 2 }`).
+
+A floating joystick: put a thumb down anywhere and drag.
+
+{{< snippet file="stopping-points/stopE/src/input/TouchStick.js" class="TouchStick" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The joystick turns the finger's position into the same kind of direction vector as the arrow keys, with x and y between −1 and 1. So `Play` doesn't care where input comes from:
+
+```js
+this.stick = this.sys.game.device.input.touch ? new TouchStick(this) : null;
+// in update(): keys first, then the stick
+if (this.direction.lengthSq() > 0) this.direction.normalize();
+else if (this.stick) this.direction.copy(this.stick.vector);
+```
+
+Two details make it pleasant: it appears wherever the thumb lands (no hunting for a fixed button), and a short drag means a slow walk, because the vector's length is how far you dragged.
+
+To test touch on a laptop, open your browser's developer tools and turn on **device mode** (the phone icon). Phaser then sees a touch screen.
+:::
+
+## Remember things
+
+`localStorage` keeps small bits of text in the browser, for this site, until the user clears it.
+
+{{< snippet file="stopping-points/stopE/src/save.js" lines="1-24" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Three things to know:
+
+- **It stores strings.** Numbers come back as text: `'14242'`, not `14242`. Convert with `Number()`. For objects, `JSON.stringify` on the way in and `JSON.parse` on the way out.
+- **It can fail.** Private windows, full storage and some embedded pages throw errors. Wrap every call in `try`, and let the game work without it.
+- **It's shared by everything on the same site.** Every game at `you.github.io` shares one `localStorage`. Prefix your keys with the game's name (`cold-chain:best-time`) so two games don't overwrite each other's saves.
+:::
+
+## Build
+
+`npm run dev` serves your source files and rebuilds as you edit. For the real thing, **build**:
+
+```bash
+npm run build
+```
+
+```
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                    0.77 kB │ gzip:   0.49 kB
+dist/assets/index-Bfzm-BbR.js  1,383.73 kB │ gzip: 362.83 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+...
+✓ built in 531ms
+```
+
+::: {.content-hidden when-format="revealjs"}
+`dist/` now holds everything: one HTML file, one JavaScript bundle with Phaser and your code, and a copy of `public/assets/`. Any web server can host it. Check the build before you deploy:
+
+```bash
+npm run preview
+```
+
+The bundle is about 1.4 MB (360 kB once the server compresses it), almost all of it Phaser. That's normal for a Phaser game, and it's what the warning is about: Vite suggests splitting big bundles, but for a game that needs Phaser before it can do anything, there's nothing to gain. You can ignore it, or silence it with `build: { chunkSizeWarningLimit: 2000 }` in `vite.config.js`.
+:::
+
+## Relative paths
+
+{{< snippet file="stopping-points/stopE/vite.config.js" >}}
+
+::: {.content-hidden when-format="revealjs"}
+By default Vite writes paths from the root of the site (`/assets/index-....js`). GitHub Pages serves your game from a sub-folder (`you.github.io/cold-chain/`), so those paths point to the wrong place and the page is blank (exercise 10.3). `base: './'` makes every path relative to the page, so the game works from any folder.
+:::
+
+## Put it online
+
+GitHub Pages hosts static sites for free. With an **Action**, GitHub builds and publishes your game on every push.
+
+1. Put your game in its own GitHub repository.
+2. In the repository: **Settings → Pages → Source: GitHub Actions**.
+3. Add this file as `.github/workflows/deploy.yml`, and push.
+
+```yaml
+name: Deploy
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+::: {.content-hidden when-format="revealjs"}
+A minute later the game is at `https://<your-username>.github.io/<repository>/`. This course site is published the same way (`.github/workflows/publish.yml`).
+
+`npm ci` installs exactly what's in `package-lock.json`, so the build on GitHub uses the same Phaser and Vite as your laptop. Commit `package-lock.json`; never commit `node_modules/` or `dist/`.
+:::
+
+## When it's slow
+
+- **Measure first.** `game.loop.actualFps` in the console, or the **Performance** panel in the developer tools.
+- **Don't create things every frame.** Make objects once and reuse them: `disableBody` and `enableBody` (lesson 4), pooled groups, one tween you pause and resume (lesson 9).
+- **Fewer, bigger textures.** Many small images cost more than one atlas (lesson 5).
+- **Turn off what you can't see.** `setVisible(false)` and `setActive(false)` on things off screen.
+
+::: {.content-hidden when-format="revealjs"}
+*Cold Chain* is far too small to be slow, so measure on the slowest phone you can find, not your laptop. That's where problems show up.
+:::
+
+## Where next
+
+- **TypeScript.** *Snail Assassin* is written in it, and the field guide shows how to read it. Types catch the `this` and typo bugs from earlier lessons before you run anything.
+- **[Phaser examples](https://phaser.io/examples)** and the **[API docs](https://docs.phaser.io)**: hundreds of small working examples, most still Phaser 3 but nearly all of them work in 4.
+- **Matter physics**, for things that tumble and stack.
+- **Your capstone**: the index card from lesson 8.
+
+## What you have
+
+{{< game stopping-points/stopE caption="Cold Chain, finished. Try it on your phone: it should ask you to turn it sideways." >}}
+
+::: {.callout-tip title="Stopping point E" .stopping-point}
+This is the finished game. To start your own copy from here:
+
+```bash
+cp -r stopping-points/stopE my-cold-chain-e
+cd my-cold-chain-e && npm install && npm run dev
+```
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 10.1: Build it — a mute key" .exercise #ex-10.1}
+Make **M** switch the sound off and on, on the title screen and during play. The title screen should say whether sound is on. The setting should survive a reload.
+
+[Answer](../answers/10-ship-answers.qmd#ex-10.1)
+:::
+
+::: {.callout-tip title="Exercise 10.2: Predict it — strings" .exercise #ex-10.2}
+What does each line give? Try them in the console.
+
+```js
+localStorage.setItem('best', 14242);
+const best = localStorage.getItem('best');
+typeof best;
+best + 1000;
+best < 20000;
+```
+
+[Answer](../answers/10-ship-answers.qmd#ex-10.2)
+:::
+
+::: {.callout-tip title="Exercise 10.3: Spot the bug — blank on GitHub" .exercise #ex-10.3}
+A labmate's game works with `npm run dev` and `npm run preview`. On GitHub Pages, at `https://them.github.io/their-game/`, the page is blank, and the console shows a 404 for `https://them.github.io/assets/index-Bq3x9Lk2.js`. Their `vite.config.js`:
+
+```js
+import { defineConfig } from 'vite';
+export default defineConfig({});
+```
+
+[Answer](../answers/10-ship-answers.qmd#ex-10.3)
+:::
+
+::: {.callout-tip title="Exercise 10.4: Tune it — thumb room" .exercise #ex-10.4}
+In device mode (or on a real phone), try the joystick with a radius of 30, 56 and 110. Which is easiest to control, and why does a bigger radius feel slower?
+
+[Answer](../answers/10-ship-answers.qmd#ex-10.4)
+:::
+
+## Key points
+
+- `Scale.FIT` with `CENTER_BOTH` fits any screen without stretching. Ask phones to turn sideways with CSS.
+- Pointer events cover mouse and touch. Turn a thumb into the same direction vector as the keys.
+- `localStorage` stores strings, can fail, and is shared across a site: convert, `try`, and prefix your keys.
+- `npm run build` makes `dist/`. Use `base: './'` so it works from any folder.
+- A GitHub Action can build and publish your game on every push.
+
+**Next:** your capstone, and the field guide to *Snail Assassin*.

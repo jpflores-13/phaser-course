@@ -1,0 +1,67 @@
+---
+title: "Module 9 answers"
+subtitle: "Game feel"
+---
+
+Back to [Module 9](../lessons/09-feel.qmd).
+
+## Exercise 9.1: Build it — footstep dust {#ex-9.1}
+
+A continuous emitter that follows the feet, switched on and off from `update()`:
+
+```js
+// create()
+this.dust = this.add.particles(0, 0, 'frost', {
+  speed: { min: 5, max: 20 },
+  lifespan: 300, // <1>
+  scale: { start: 0.6, end: 0 },
+  alpha: { start: 0.5, end: 0 },
+  tint: 0x94a3b8, // <2>
+  frequency: 70,
+  emitting: false,
+});
+this.dust.startFollow(this.player, 0, 14).setDepth(4); // <3>
+
+// update(), after walk()
+const kicking = this.player.body.speed > 60 && !onSpill; // <4>
+if (kicking && !this.dust.emitting) this.dust.start();
+else if (!kicking && this.dust.emitting) this.dust.stop(); // <5>
+```
+1. Short-lived and small: dust should be barely there.
+2. The frost texture again, tinted grey. One white texture can be any colour of particle.
+3. 14 pixels below the researcher's middle is about where the feet are.
+4. A speed threshold, not "is a key down": the researcher still slides for a moment after you let go, and that slide shouldn't kick up dust either. No dust on a spill, which is wet.
+5. Only call `start` and `stop` when the state changes. Calling `start()` every frame works, but it's the same habit that causes exercise 9.3.
+
+{{< game solutions/09/ex-9.1 caption="Walk around and watch the feet." >}}
+
+The full code is in `solutions/09/ex-9.1/`.
+
+## Exercise 9.2: Predict it — pick the ease {#ex-9.2}
+
+1. **Door slamming**: `Cubic.In` or `Quad.In`. It speeds up and hits hard at the end; pair it with a tiny shake on impact. (`Bounce.Out` if you want it to rattle.)
+2. **"GAME OVER" dropping in**: `Bounce.Out` or `Back.Out`. It lands and settles; the overshoot gives it weight.
+3. **Thaw meter**: `Linear`, or no tween at all. The meter shows a real quantity; easing it would make it lie about how fast things are thawing.
+4. **Coin popping out**: `Back.Out` for the scale (it pops past full size and settles), with `Quad.Out` upward and `Quad.In` back down for the arc.
+
+The third is the one people get wrong. Juice is for things that *happen*; a measurement should be honest.
+
+## Exercise 9.3: Spot the bug — the flicker that ate the frame rate {#ex-9.3}
+
+`redraw()` runs every time the registry changes, which is every frame (the clock changes every frame). So while the thaw is over 75, it adds a **new**, never-ending tween **every frame**: about 60 a second, all fighting over the same `alpha`, none of them ever stopping. After ten seconds there are hundreds.
+
+Make the tween once, paused, and only resume or pause it when the danger state changes. That's what *Cold Chain*'s HUD does:
+
+{{< snippet file="stopping-points/stopE/src/scenes/Hud.js" lines="24-24" >}}
+
+{{< snippet file="stopping-points/stopE/src/scenes/Hud.js" lines="49-54" >}}
+
+The general rule: `update()` and anything called every frame should *change state*, not *create things*. Creating tweens, emitters, timers, text or listeners belongs in `create()` or in response to a one-off event.
+
+## Exercise 9.4: Tune it — how heavy is a hit? {#ex-9.4}
+
+- **0 ms**: the hit registers, but it feels like brushing past the cart.
+- **70 ms**: a tiny freeze you don't consciously see. The hit feels solid. This is the default.
+- **300 ms**: a visible stall. It feels like the game hiccuped, not like you were hit hard. Long hit-stop works in fighting games because each hit is rare and huge; here, it's just annoying.
+
+For shake, 0.003 is barely visible and 0.03 throws the whole screen around, which is too much for a hit you'll take several times a minute. The more often something happens, the smaller its feedback should be. Save the big effects for the rare, important moments.

@@ -1,0 +1,71 @@
+---
+title: "Module 8 answers"
+subtitle: "Game mechanics"
+---
+
+Back to [Module 8](../lessons/08-mechanics.qmd).
+
+## Exercise 8.1: Build it — a harder second floor {#ex-8.1}
+
+Two changes. In `tuning.js`, give each floor a rate:
+
+```js
+floors: [
+  { map: 'floor-1', deliveries: 3, thawPerSecond: 5 },
+  { map: 'floor-2', deliveries: 3, thawPerSecond: 9 },
+],
+```
+
+In `Play.update()`, use the floor's rate if it has one:
+
+```js
+const rate = tuning.floors[this.floorIndex].thawPerSecond ?? tuning.thaw.perSecond; // <1>
+this.setThaw(this.thaw + (rate * delta) / 1000);
+```
+1. `??` falls back to the general rate when a floor doesn't set its own, so older floor entries keep working.
+
+Notice what *didn't* change: no new `if (floor === 2)` anywhere in the scene. The scene asks "what's the rate here?" and the data answers. A third floor is one line in `tuning.js`.
+
+{{< game solutions/08/ex-8.1 caption="Floor 1 is gentler now; floor 2 bites." >}}
+
+The full code is in `solutions/08/ex-8.1/`.
+
+## Exercise 8.2: Predict it — free ice {#ex-8.2}
+
+- **100**: the dry ice resets the meter almost completely, so it's *always* worth the detour. It stops being a choice and becomes a chore: pick up, fetch ice, deliver, every time. Runs get longer and less interesting.
+- **0**: the dry ice does nothing, so it's *never* worth the detour. Players learn to ignore it, and it's just decoration.
+
+Both kill the decision. Somewhere in between (*Cold Chain* uses 40), it's worth taking when it's close or you're in trouble, and not otherwise. That's when the player is actually thinking.
+
+In design language, 100 creates a **dominant strategy**: one option that's always best. Players will find it and play nothing else, even if it's boring.
+
+## Exercise 8.3: Spot the design bug — the ice on the way {#ex-8.3}
+
+There's no decision any more. If the dry ice is on the path, every player picks it up every time, for free. It's not a reward for a risk; it's just a slower thaw rate with extra steps.
+
+The detour *is* the mechanic. The cost (time, crossing a cart's lane) is what makes the reward mean something. "So players don't miss them" is a reasonable worry, but the fix is feedback (make the ice more visible, pulse it, make a sound when it appears), not removing the choice.
+
+This kind of bug never shows up in the console. You find it by watching people play.
+
+## Exercise 8.4: Tune it — the narrow band {#ex-8.4}
+
+Your numbers will differ. Typical findings:
+
+- **Too easy**: thaw under 4 per second, or dry ice over 70. Nothing you do matters; you can stroll.
+- **Unfair**: thaw over 15, or carts at 2× speed with 3 extra per delivery. You lose to things you couldn't have avoided, and you don't know what to do differently.
+- **Shippable**: losing happens, and when it does, you can say why ("I went for the ice when the cart was coming").
+
+That last test is the important one. A hard game is fine; a game where the player can't tell why they lost is not. Watch for it in playtests, and tune one number at a time, or you won't know which change did it.
+
+## Exercise 8.5: Design it — an index card {#ex-8.5}
+
+There's no single answer. Here's an example from chromatin biology, to show the level of detail:
+
+- **Verb**: *slide* (a cohesin ring along DNA).
+- **Goal**: make a loop by reaching a CTCF site facing the right way.
+- **Obstacle**: other proteins on the DNA, and the ring falling off.
+- **Core loop**: load onto DNA → extrude, dodging obstacles → stop at a CTCF site (or not) → see the loop you made.
+- **Risk and reward**: wrongly-oriented CTCF sites are easy to reach but don't hold; pushing past them costs time but makes a bigger loop.
+- **Simplified**: speed, numbers of proteins, one dimension. **True**: loops stop at convergent CTCF sites.
+
+Check your card against the lesson: is there a real choice? Would good players sometimes take the risk and sometimes not? Can you say what's true and what's simplified?

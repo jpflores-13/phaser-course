@@ -143,3 +143,39 @@ code, pre {
   font-variant-ligatures: none;
   font-feature-settings: "liga" 0, "calt" 0;
 }
+
+// ---- {{< tuning >}} ---------------------------------------------------------
+.tuning-panel {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-left: 4px solid $amber;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin: -0.5rem 0 1.5rem 0;
+  label {
+    display: grid;
+    grid-template-columns: minmax(10rem, 14rem) 1fr 3.5rem;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.15rem 0;
+  }
+  input[type="checkbox"] { justify-self: start; }
+  output { font-family: $font-family-monospace; font-size: 0.85rem; text-align: right; }
+  .tuning-buttons {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    button {
+      border: 1px solid $ice;
+      background: transparent;
+      color: $ice;
+      border-radius: 999px;
+      padding: 0.1rem 0.8rem;
+      font-size: 0.9rem;
+      &:hover { background: $ice; color: #fff; }
+    }
+  }
+  @media (max-width: 576px) {
+    label { grid-template-columns: 1fr 3rem; }
+    .tuning-name { grid-column: 1 / -1; }
+  }
+}
