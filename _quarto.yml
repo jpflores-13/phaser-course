@@ -8,6 +8,9 @@ project:
     - schedule.qmd
     - setup.qmd
     - about.qmd
+    - cheatsheet.qmd
+    - glossary.qmd
+    - references.qmd
     - "prework/*.qmd"
     - "lessons/*.qmd"
     - "answers/*.qmd"
@@ -125,6 +128,8 @@ website:
             href: answers/remix-answers.qmd
           - text: "Field guide"
             href: answers/field-guide-answers.qmd
+      - text: Cheat sheet
+        href: cheatsheet.qmd
       - text: About
         href: about.qmd
     right:
@@ -163,6 +168,11 @@ website:
           contents:
             - practice/remix.qmd
             - practice/capstone.qmd
+        - section: "Reference"
+          contents:
+            - cheatsheet.qmd
+            - glossary.qmd
+            - references.qmd
     - id: answers
       title: "Answer keys"
       style: docked
@@ -198,6 +208,10 @@ website:
   page-footer:
     left: "Phaser Course, by JP Flores. Lessons [CC BY 4.0](/about.qmd#license), code [MIT](/about.qmd#license)."
     right:
+      - text: Glossary
+        href: glossary.qmd
+      - text: References
+        href: references.qmd
       - text: Cite
         href: about.qmd#how-to-cite
 

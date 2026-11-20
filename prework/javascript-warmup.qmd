@@ -1,7 +1,248 @@
 ---
 title: "JavaScript warm-up"
-subtitle: "Optional, about an hour, before day 1."
-draft: true
+subtitle: "Optional practice before day 1. About an hour, in your browser, nothing to install."
 ---
 
-For anyone who wants more JavaScript practice than lesson 1 gives. Lesson 1 doesn't assume you did this.
+[Lesson 1](../lessons/01-javascript.qmd) teaches the JavaScript you need for the course in 45 minutes. This page is for anyone who'd like to arrive with that already in their fingers. Lesson 1 doesn't assume you did it.
+
+Everything here runs in your browser's console. Open it now: `F12`, or `Cmd` + `Option` + `I` on a Mac, then the **Console** tab. Type each example, press Enter, and see what comes back. Try each exercise before opening its answer.
+
+::: {.callout-note title="If you know R or Python"}
+Most of JavaScript will look familiar. The differences that trip people up are: counting from 0, `===` instead of `==`, `const` and `let`, no vectorised maths, and `this`. Each gets an exercise below.
+:::
+
+## 1. Values and variables (10 minutes)
+
+```js
+const species = 'Conus geographus';
+let thaw = 0;
+thaw = thaw + 7;
+thaw += 7;          // the same, shorter
+`${species}: ${thaw}% thawed`
+```
+
+- `const` for a name you'll never point elsewhere, `let` for one you will.
+- Text in single quotes, double quotes, or backticks. Backticks let you put `${...}` inside.
+
+::: {.callout-tip title="Try it: 1.1" collapse="false"}
+Make a `const` called `freezer` holding `'-80'`, and a `let` called `samples` holding `0`. Add 3 to `samples`. Then build the string `'3 samples in the -80'` from the two variables, with backticks.
+:::
+
+::: {.callout-note title="Answer 1.1" collapse="true"}
+```js
+const freezer = '-80';
+let samples = 0;
+samples += 3;
+`${samples} samples in the ${freezer}`;   // '3 samples in the -80'
+```
+If you wrote `const samples = 0` you got `TypeError: Assignment to constant variable.` when adding 3. That's the difference between `const` and `let`.
+:::
+
+::: {.callout-tip title="Try it: 1.2" collapse="false"}
+Predict each answer, then check:
+
+```js
+5 == '5'
+5 === '5'
+0.1 + 0.2 === 0.3
+typeof 'cold'
+typeof undefined
+```
+:::
+
+::: {.callout-note title="Answer 1.2" collapse="true"}
+`true`, `false`, `false`, `'string'`, `'undefined'`.
+
+`==` converts types before comparing, so `5 == '5'` is `true`. That's why everyone uses `===`. The third one is the same floating-point surprise as in R and Python: `0.1 + 0.2` is `0.30000000000000004`.
+:::
+
+## 2. Arrays (10 minutes)
+
+```js
+const thaw = [12, 48, 77, 95];
+thaw[0];          // 12: counting starts at 0
+thaw.length;      // 4
+thaw.push(30);    // add to the end
+thaw.map((t) => t / 100);          // a new array: [0.12, 0.48, ...]
+thaw.filter((t) => t >= 75);       // [77, 95]
+thaw.reduce((sum, t) => sum + t, 0);   // the total
+```
+
+::: {.callout-tip title="Try it: 2.1" collapse="false"}
+With `const thaw = [12, 48, 77, 95, 30];`:
+
+1. How many samples are over 50% thawed? (One line.)
+2. What's the average thaw? (One line, using `reduce` and `length`.)
+3. What does `thaw * 2` give, and why?
+:::
+
+::: {.callout-note title="Answer 2.1" collapse="true"}
+```js
+thaw.filter((t) => t > 50).length;                      // 2
+thaw.reduce((sum, t) => sum + t, 0) / thaw.length;      // 52.4
+thaw * 2;                                               // NaN
+```
+JavaScript has no vectorised arithmetic. An array times a number is "not a number". Use `thaw.map((t) => t * 2)`.
+:::
+
+## 3. Objects (10 minutes)
+
+```js
+const cart = { x: 300, y: 120, speed: 140, axis: 'y' };
+cart.speed;            // 140
+cart.speed = 200;      // change it
+cart.colour = 'grey';  // add a property
+const { x, y } = cart; // unpack two properties into two variables
+Object.keys(cart);     // ['x', 'y', 'speed', 'axis', 'colour']
+```
+
+An array of objects is the JavaScript data frame:
+
+```js
+const samples = [
+  { id: 'A1', thaw: 12 },
+  { id: 'B4', thaw: 81 },
+  { id: 'C2', thaw: 47 },
+];
+```
+
+::: {.callout-tip title="Try it: 3.1" collapse="false"}
+With `samples` above:
+
+1. Get the IDs of samples under 50% thawed: `['A1', 'C2']`.
+2. Find the one sample with ID `'B4'`. (Hint: arrays have a `find` method that works like `filter` but returns one item.)
+3. Sort them from least to most thawed. (Hint: `sort((a, b) => ...)`.)
+:::
+
+::: {.callout-note title="Answer 3.1" collapse="true"}
+```js
+samples.filter((s) => s.thaw < 50).map((s) => s.id);   // ['A1', 'C2']
+samples.find((s) => s.id === 'B4');                     // { id: 'B4', thaw: 81 }
+samples.sort((a, b) => a.thaw - b.thaw);
+```
+`sort` takes a function that returns a negative number if `a` comes first. `a.thaw - b.thaw` sorts small to large. Careful: `sort` changes the array itself, unlike `map` and `filter`.
+:::
+
+## 4. Functions (10 minutes)
+
+```js
+function thawAfter(seconds, rate = 7) {
+  return Math.min(100, seconds * rate);
+}
+
+const isThawed = (thaw) => thaw >= 100;   // an arrow function
+
+thawAfter(10);          // 70
+thawAfter(10, 12);      // 100
+isThawed(thawAfter(20)); // true
+```
+
+::: {.callout-tip title="Try it: 4.1" collapse="false"}
+Write an arrow function `clamp(value, min, max)` that keeps `value` between `min` and `max`. Check that `clamp(140, 0, 100)` is `100` and `clamp(-5, 0, 100)` is `0`.
+:::
+
+::: {.callout-note title="Answer 4.1" collapse="true"}
+```js
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+```
+Phaser has this already, as `Phaser.Math.Clamp`. Writing it once yourself makes it easy to remember what it does.
+:::
+
+## 5. Classes and `this` (15 minutes)
+
+```js
+class Sample {
+  constructor(id) {
+    this.id = id;
+    this.thaw = 0;
+  }
+
+  warm(seconds) {
+    this.thaw = Math.min(100, this.thaw + seconds * 7);
+    return this;     // returning `this` lets calls chain
+  }
+
+  get thawed() {     // a getter: used like a property, no ()
+    return this.thaw >= 100;
+  }
+}
+
+const s = new Sample('A1');
+s.warm(5).warm(5);
+s.thaw;      // 70
+s.thawed;    // false
+```
+
+::: {.callout-tip title="Try it: 5.1" collapse="false"}
+Add a method `chill(amount)` that lowers `thaw` by `amount`, never below 0, and returns `this`. Then: make a sample, warm it 12 seconds, chill it by 40, and check its thaw.
+:::
+
+::: {.callout-note title="Answer 5.1" collapse="true"}
+```js
+class Sample {
+  constructor(id) {
+    this.id = id;
+    this.thaw = 0;
+  }
+  warm(seconds) {
+    this.thaw = Math.min(100, this.thaw + seconds * 7);
+    return this;
+  }
+  chill(amount) {
+    this.thaw = Math.max(0, this.thaw - amount);
+    return this;
+  }
+}
+
+new Sample('A1').warm(12).chill(40).thaw;   // 44
+```
+In the console, declaring `class Sample` a second time is an error. Reload the page first, or give the class a new name.
+:::
+
+::: {.callout-tip title="Try it: 5.2" collapse="false"}
+Predict, then run. Why are the two answers different?
+
+```js
+const box = {
+  label: 'box 7',
+  regular: function () { return this?.label; },
+  arrow: () => this?.label,
+};
+box.regular();
+box.arrow();
+```
+:::
+
+::: {.callout-note title="Answer 5.2" collapse="true"}
+`box.regular()` gives `'box 7'`; `box.arrow()` gives `undefined`.
+
+A regular function gets its `this` from **how it's called**: `box.regular()` is called on `box`, so `this` is `box`. An arrow function has no `this` of its own; it uses the `this` of the place where it was **written**, which here is the console's top level, not `box`.
+
+That's the rule lesson 1 builds on: in a Phaser scene, arrow functions written inside a method keep the scene as `this`, which is exactly what you want for callbacks.
+:::
+
+## 6. A tiny game loop (10 minutes)
+
+Put it together. This runs a "game" in the console: a sample thaws every tick, and you can chill it while it runs.
+
+```js
+const sample = new Sample('A1');      // the class from 5.1
+
+const timer = setInterval(() => {
+  sample.warm(1);
+  console.log(`${sample.id}: ${sample.thaw}%`);
+  if (sample.thaw >= 100) {
+    console.log('Thawed!');
+    clearInterval(timer);
+  }
+}, 500);
+
+// while it runs, type this to buy time:
+sample.chill(30);
+```
+
+That's a game loop, slowed down: every half second, update the state and show it, and stop when the rule says so. Phaser does the same thing about 60 times a second, and draws a picture instead of logging a line. [Lesson 0](../lessons/00-engine.qmd) starts there.
+
+## Ready
+
+If you got through this page, you're more than ready for day 1. If something didn't make sense, bring it: lesson 1 covers all of it again, and there's time for questions.

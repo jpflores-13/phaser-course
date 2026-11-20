@@ -1,0 +1,50 @@
+---
+title: "References"
+subtitle: "Documentation, tools, and reading for after the course."
+---
+
+## Phaser
+
+- **[Phaser documentation](https://docs.phaser.io)**: the API reference and guides.
+- **[Phaser examples](https://phaser.io/examples)**: hundreds of small, working examples. Many are written for Phaser 3; nearly all work in Phaser 4, and the [cheat sheet](cheatsheet.qmd#phaser-3-habits-that-break-in-4) lists the exceptions the course met.
+- **[Phaser source on GitHub](https://github.com/phaserjs/phaser)**: when the docs aren't enough, the source is readable. The `types/phaser.d.ts` file in your `node_modules/phaser/` folder is a searchable list of every method.
+
+## JavaScript and the browser
+
+- **[MDN JavaScript Guide](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide)**: the standard reference, with a good tutorial.
+- **[MDN: Web Storage API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API)**: `localStorage` in detail.
+- **[TypeScript handbook](https://www.typescriptlang.org/docs/handbook/intro.html)**: for when you're ready to add types.
+
+## Tools
+
+| Tool | For |
+|---|---|
+| [Node.js](https://nodejs.org) | running the build tools |
+| [Vite](https://vite.dev) | the dev server and the build |
+| [Tiled](https://www.mapeditor.org) and its [documentation](https://doc.mapeditor.org) | maps |
+| [Piskel](https://www.piskelapp.com) · [Aseprite](https://www.aseprite.org) | drawing pixel art and spritesheets |
+| [jsfxr](https://sfxr.me) | retro sound effects in the browser |
+| [Quarto](https://quarto.org) | this course site |
+
+## Free assets
+
+Check every license before you use something, and keep a credits file.
+
+- **[Kenney](https://kenney.nl/assets)**: thousands of consistent sprites, tiles and sounds, all CC0.
+- **[OpenGameArt](https://opengameart.org)**: a huge range, mixed licenses.
+- **[itch.io game assets](https://itch.io/game-assets/free)**: free packs, mixed licenses.
+
+## Game design
+
+- Jesse Schell, *The Art of Game Design: A Book of Lenses*. Design as a set of questions to ask of your game. The best single book for the capstone.
+- Steve Swink, *Game Feel: A Game Designer's Guide to Virtual Sensation*. The book behind lesson 9.
+- Raph Koster, *A Theory of Fun for Game Design*. Short, illustrated, and about why games are fun at all.
+- Jan Willem Nijman, *The art of screenshake* (talk, 2013). Thirty small changes that make a flat shooter feel good. Remix 6 in miniature.
+
+## Accessibility
+
+- **[Game Accessibility Guidelines](https://gameaccessibilityguidelines.com)**: practical, sorted by effort. *Snail Assassin*'s accessibility options follow them ([field guide](field-guide/07-grown-up.qmd#the-docs-folder)).
+
+## Games from research
+
+- **[Minus 80 Studios](https://jpflores-13.github.io/Minus80Studios/)**: short games inspired by real discoveries, including *Snail Assassin*, the subject of the [field guide](field-guide/index.qmd).

@@ -1,0 +1,264 @@
+---
+title: "Cheat sheet"
+subtitle: "The Phaser 4 you used in the course, in one place."
+toc: false
+format:
+  html:
+    format-links:
+      - {format: typst, text: PDF, icon: file-pdf}
+  typst:
+    papersize: a4
+    margin:
+      x: 1.4cm
+      y: 1.4cm
+    fontsize: 8.5pt
+    columns: 2
+---
+
+::: {.cheatsheet-columns}
+
+## Project
+
+```bash
+cp -r starter my-game && cd my-game
+npm install          # once
+npm run dev          # localhost:5173
+npm run build        # → dist/
+npm run preview      # check the build
+```
+
+Add `?debug` to the address to see physics bodies (if the config reads it).
+
+## Game config
+
+```js
+new Phaser.Game({
+  type: Phaser.AUTO,
+  parent: 'game',
+  width: 960, height: 540,
+  pixelArt: true,
+  scale: { mode: Phaser.Scale.FIT,
+           autoCenter: Phaser.Scale.CENTER_BOTH },
+  physics: { default: 'arcade' },
+  input: { activePointers: 2 },
+  scene: [Boot, Title, Play, Hud],
+});
+```
+
+## A scene
+
+```js
+export class Play extends Phaser.Scene {
+  constructor() { super('Play'); }
+  init(data) {}    // data from start(); reset here
+  preload() {}     // queue files
+  create() {}      // build, once files have loaded
+  update(time, delta) {} // every frame, delta in ms
+}
+```
+
+## Load (in `preload`)
+
+```js
+this.load.setPath('assets');
+this.load.image('tube', 'sprites/tube.png');
+this.load.spritesheet('hero', 'sprites/hero.png',
+  { frameWidth: 32, frameHeight: 32 });
+this.load.atlas('ui', 'ui.png', 'ui.json');
+this.load.audio('ding', ['ding.ogg', 'ding.mp3']);
+this.load.tilemapTiledJSON('map', 'maps/floor.tmj');
+this.load.on('progress', (v) => {});  // 0 to 1
+```
+
+## Add things
+
+```js
+this.add.image(x, y, 'tube');
+this.add.sprite(x, y, 'hero', 1);   // can animate
+this.add.tileSprite(0, 0, w, h, 'lab', 0)
+  .setOrigin(0);
+this.add.text(x, y, 'Hi', { fontSize: '24px' });
+this.add.rectangle(x, y, w, h, 0xff0000);
+this.add.zone(x, y, w, h);          // invisible
+```
+
+| Setter | Does |
+|---|---|
+| `setOrigin(0.5)` | which point sits at `x, y` (images: middle; text: top-left) |
+| `setScale(2)` `setFlipX(true)` | size, mirror |
+| `setAlpha(0.5)` `setVisible(false)` | transparency, hide |
+| `setDepth(10)` | draw order (higher on top) |
+| `setTint(0xff8888)` | tint (and `clearTint()`) |
+| `setScrollFactor(0)` | stay on screen as the camera moves |
+
+## Keyboard and pointer
+
+```js
+const kb = this.input.keyboard;
+this.cursors = kb.createCursorKeys();
+this.keys = kb.addKeys('W,A,S,D');
+this.cursors.left.isDown;   // held down
+// pressed this frame only:
+Phaser.Input.Keyboard.JustDown(this.cursors.space);
+kb.once('keydown-SPACE', fn);
+this.input.on('pointerdown', (p) => { p.x; p.y; });
+sprite.setInteractive().on('pointerdown', fn);
+this.sys.game.device.input.touch;   // touch screen?
+```
+
+## Arcade physics
+
+```js
+const p = this.physics.add.sprite(x, y, 'hero');
+this.physics.add.existing(rect);        // dynamic
+this.physics.add.existing(zone, true);  // static
+p.setVelocity(vx, vy);
+p.setAcceleration(ax, ay);
+p.setMaxVelocity(220);
+p.setDrag(1800);   // only acts with no acceleration
+p.setBounce(1);
+p.setCollideWorldBounds(true);
+p.setPushable(false);   // others can't shove it
+p.body.setSize(18, 14).setOffset(7, 17);
+p.body.reset(x, y);     // teleport, zero velocity
+p.disableBody(true, true);
+p.enableBody(true, x, y, true, true);
+this.physics.world.setBounds(0, 0, w, h);
+```
+
+```js
+const phys = this.physics;
+phys.add.collider(a, b, onHit, null, this);   // solid
+phys.add.overlap(a, b, onTouch, null, this);  // report
+phys.overlap(a, b);   // true or false, right now
+```
+
+## Groups
+
+```js
+const walls = this.physics.add.staticGroup();
+walls.create(x, y, 'lab', 2);
+const carts = this.physics.add.group();
+carts.create(x, y, 'cart');
+carts.getChildren().forEach((c) => {});
+carts.countActive();
+```
+
+## Tilemaps (Tiled JSON, tileset embedded)
+
+```js
+const map = this.make.tilemap({ key: 'map' });
+// tileset name in Tiled, then the image's key:
+const tiles = map.addTilesetImage('lab', 'lab-tiles');
+const walls = map.createLayer('walls', tiles);
+walls.setCollisionByProperty({ collides: true });
+// each has x, y, type, properties:
+const objs = map.getObjectLayer('objects').objects;
+const w = map.widthInPixels, h = map.heightInPixels;
+```
+
+## Camera
+
+```js
+const cam = this.cameras.main;
+cam.setBounds(0, 0, w, h);
+cam.startFollow(player, true, 0.12, 0.12); // lerp
+cam.setZoom(2);
+cam.setDeadzone(200, 120);
+cam.shake(140, 0.006);
+cam.flash(150, 255, 80, 80);
+cam.fadeOut(500);
+cam.once('camerafadeoutcomplete', fn);
+this.cameras.add(x, y, w, h);   // a second camera
+```
+
+## Animation
+
+```js
+// once, for the whole game
+this.anims.create({
+  key: 'walk',
+  frames: this.anims.generateFrameNumbers('hero',
+    { start: 0, end: 3 }),
+  frameRate: 10,
+  repeat: -1,   // forever
+});
+sprite.anims.play('walk', true); // true: don't restart
+sprite.anims.stop();
+sprite.setFrame(1);
+```
+
+## Tweens, timers, particles
+
+```js
+this.tweens.add({
+  targets: obj,
+  scale: { from: 1.8, to: 1 },
+  duration: 250,
+  ease: 'Back.Out',   // also: yoyo, repeat, delay
+  onComplete: () => {},
+});
+this.time.delayedCall(450, () => {});
+this.time.addEvent({ delay: 1000, loop: true,
+  callback: fn });
+
+const fx = this.add.particles(0, 0, 'frost', {
+  speed: { min: 60, max: 200 },
+  lifespan: 800,
+  scale: { start: 1.4, end: 0 },
+  emitting: false,
+});
+fx.explode(24, x, y);     // a burst
+fx.startFollow(player);   // a trail...
+fx.start();  fx.stop();   // ...on and off
+```
+
+## Sound
+
+```js
+this.sound.play('ding', { volume: 0.5, rate: 1.2 });
+const music = this.sound.add('theme', { loop: true });
+music.play();
+this.sound.mute = true;
+// no sound until the first click or key press
+```
+
+## Scenes and shared state
+
+| Call | Does |
+|---|---|
+| `this.scene.start('Play', data)` | stop this scene, start `Play` |
+| `this.scene.launch('Hud')` | run `Hud` alongside |
+| `this.scene.restart(data)` | run `init` and `create` again |
+| `this.scene.pause()` / `resume('Play')` | freeze, carry on |
+| `this.scene.stop('Hud')` | stop another scene |
+
+```js
+this.registry.set('thaw', 40);  // every scene sees it
+this.registry.events.on('changedata', fn, this);
+// clean up what you attached to longer-lived things:
+this.events.once('shutdown', () => {});
+```
+
+## Save
+
+```js
+const KEY = 'my-game:best';   // namespaced
+try {
+  localStorage.setItem(KEY, String(ms));
+} catch {}
+const best = Number(localStorage.getItem(KEY)) || null;
+// objects: JSON.stringify in, JSON.parse out
+```
+
+## Deploy
+
+`vite.config.js`: `base: './'`. GitHub: Settings → Pages → GitHub Actions, then a workflow that runs `npm ci`, `npm run build` and uploads `dist/` ([lesson 10](lessons/10-ship.qmd#put-it-online)).
+
+## Phaser 3 habits that break in 4
+
+- `group.children.each(fn)` is gone. Use `group.getChildren().forEach(fn)`.
+- `setTintFill(c)` does nothing. Use `setTint(c)`, then `setTintMode(Phaser.TintModes.FILL)`.
+- `map.createStaticLayer` and `createDynamicLayer` are gone. Use `map.createLayer`.
+
+:::

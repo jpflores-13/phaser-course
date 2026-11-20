@@ -179,3 +179,23 @@ code, pre {
     .tuning-name { grid-column: 1 / -1; }
   }
 }
+
+// ---- cheat sheet (HTML) ----------------------------------------------------
+.cheatsheet-columns {
+  @media (min-width: 992px) {
+    column-count: 2;
+    column-gap: 2rem;
+    h2 { break-after: avoid; }
+    table, div.sourceCode { break-inside: avoid; }
+  }
+  h2 { font-size: 1.15rem; margin-top: 1rem; }
+  table { font-size: 0.85rem; }
+  table code { white-space: nowrap; }
+  div.sourceCode { font-size: 0.82rem; }
+}
+
+// ---- glossary ----------------------------------------------------------------
+.glossary dl {
+  dt { font-weight: 600; margin-top: 0.9rem; }
+  dd { margin-left: 0; }
+}

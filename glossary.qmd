@@ -1,0 +1,140 @@
+---
+title: "Glossary"
+subtitle: "The words the course uses, and where they first come up."
+---
+
+::: {.glossary}
+
+Acceleration
+: How fast a body's velocity changes, in pixels per second per second. Low acceleration feels heavy. [Lesson 4](lessons/04-physics.qmd#acceleration-and-drag)
+
+Animation
+: A list of frames from a spritesheet and a speed to play them at. Made once with `this.anims.create`, shared by the whole game. [Lesson 5](lessons/05-assets.qmd#make-an-animation)
+
+Arcade physics
+: Phaser's fast, simple physics engine: boxes and circles that don't rotate. The one this course uses. Compare *Matter*. [Lesson 4](lessons/04-physics.qmd)
+
+Atlas
+: One image packed with frames of different sizes, plus a JSON file naming each frame. The efficient alternative to many separate images. [Lesson 5](lessons/05-assets.qmd#what-the-loader-can-load)
+
+Body
+: What the physics engine sees of a game object: a box with a position, velocity and size. Not always the same size as the picture. [Lesson 4](lessons/04-physics.qmd#bodies-and-game-objects)
+
+Callback
+: A function you hand to something else to call later: when two bodies touch, when a timer ends, when a tween finishes. [Lesson 1](lessons/01-javascript.qmd#the-one-thing-about-this)
+
+Camera
+: What decides which part of the world is on screen. Every scene has one; you can add more. [Lesson 6](lessons/06-worlds.qmd#a-camera-that-follows)
+
+Collider
+: A rule that two things are solid to each other: Phaser pushes them apart, and can call you back. Compare *overlap*. [Lesson 4](lessons/04-physics.qmd#collide-or-overlap)
+
+Core loop
+: The short thing a player does over and over. In *Cold Chain*: pick up, cross the lab, store. [Lesson 8](lessons/08-mechanics.qmd#the-core-loop)
+
+Delta
+: The time since the last frame, in milliseconds. Multiply speeds by it so a game runs the same at any frame rate. [Lesson 0](lessons/00-engine.qmd#frames-arent-all-the-same-length)
+
+Depth
+: Draw order. Higher depth draws on top. [Lesson 2](lessons/02-first-scene.qmd#draw-order)
+
+Dominant strategy
+: One choice that's always best, so players stop choosing. A design bug. [Lesson 8](answers/08-mechanics-answers.qmd#ex-8.2)
+
+Drag
+: How fast a body slows down when nothing's pushing it. In Arcade physics it only acts on an axis with no acceleration. [Lesson 4](lessons/04-physics.qmd#acceleration-and-drag)
+
+Dynamic body
+: A body that moves and can be pushed. Players, carts. Compare *static body*. [Lesson 4](lessons/04-physics.qmd#static-and-dynamic)
+
+Ease
+: How a tween travels from start to end: steadily, fast then slow, overshooting, bouncing. [Lesson 9](lessons/09-feel.qmd#eases)
+
+Frame
+: (1) One pass of the game loop, about 1/60 of a second. (2) One picture in a spritesheet. [Lesson 0](lessons/00-engine.qmd#a-game-is-a-loop), [lesson 2](lessons/02-first-scene.qmd#load-the-files)
+
+Game feel
+: Fast, physical feedback (tweens, particles, shake, sound) that makes actions feel like they matter. Also called *juice*. [Lesson 9](lessons/09-feel.qmd)
+
+Game loop
+: Read input, update the world, draw the frame, repeat. [Lesson 0](lessons/00-engine.qmd#a-game-is-a-loop)
+
+Game object
+: Anything a scene can show: an image, a sprite, text, a tilemap layer. Made with `this.add`. [Lesson 2](lessons/02-first-scene.qmd#put-things-on-the-screen)
+
+Group
+: A collection of similar game objects that share settings and can collide as one. [Lesson 4](lessons/04-physics.qmd#static-and-dynamic)
+
+Hit-stop
+: Freezing the action for a few milliseconds when something hits, so the impact feels heavy. [Lesson 9](lessons/09-feel.qmd#getting-hit)
+
+HUD
+: Heads-up display: the meters, counters and clock drawn over the game. *Cold Chain*'s is its own scene. [Lesson 7](lessons/07-scenes.qmd#the-registry-shared-data)
+
+Lerp
+: Short for *linear interpolation*. For a camera: how much of the gap to its target it closes each frame. [Lesson 6](lessons/06-worlds.qmd#a-camera-that-follows)
+
+Loader
+: `this.load`: queues files in `preload()` and loads them before `create()`. [Lesson 5](lessons/05-assets.qmd)
+
+localStorage
+: The browser's small key-and-text store, kept per site. How games remember things between visits. [Lesson 10](lessons/10-ship.qmd#remember-things)
+
+Matter
+: Phaser's other physics engine: rotating shapes, stacking, joints. Slower and harder to control than Arcade. [Lesson 4](lessons/04-physics.qmd#where-you-start)
+
+Object layer
+: A layer in a Tiled map that holds points and shapes instead of tiles: where things start, with properties. [Lesson 6](lessons/06-worlds.qmd#put-things-on-the-map)
+
+Origin
+: The point of a game object that sits at its `x, y`. The middle for images; the top-left for text. [Lesson 2](lessons/02-first-scene.qmd#where-things-go)
+
+Overlap
+: A rule that tells you when two things touch, without pushing them apart. For pickups and zones. [Lesson 4](lessons/04-physics.qmd#collide-or-overlap)
+
+Particle emitter
+: Spawns many short-lived images (frost, dust, sparks), continuously or in bursts. [Lesson 9](lessons/09-feel.qmd#particles)
+
+Pointer
+: Phaser's name for a mouse or a finger. The same events work for both. [Lesson 10](lessons/10-ship.qmd#touch)
+
+Registry
+: A store of values shared by every scene, with an event when anything changes. [Lesson 7](lessons/07-scenes.qmd#the-registry-shared-data)
+
+Risk and reward
+: A choice where the better outcome costs something to reach. A real one is taken sometimes, not always. [Lesson 8](lessons/08-mechanics.qmd#risk-and-reward)
+
+Scale Manager
+: Fits the game's fixed size into the browser window. `FIT` is the safe default. [Lesson 10](lessons/10-ship.qmd#fit-any-screen)
+
+Scene
+: One screen of a game (a title, a level, a HUD), with its own objects and its own `preload`, `create` and `update`. [Lesson 2](lessons/02-first-scene.qmd#a-scene-and-its-lifecycle), [lesson 7](lessons/07-scenes.qmd)
+
+Scroll factor
+: How much an object moves with the camera. `0` pins it to the screen; between 0 and 1 gives parallax. [Lesson 6](lessons/06-worlds.qmd#things-that-dont-scroll)
+
+Spritesheet
+: One image cut into a grid of equal frames. [Lesson 5](lessons/05-assets.qmd#the-researcher-spritesheet)
+
+Static body
+: A body that never moves and can't be pushed. Walls, benches. Cheaper than a dynamic one. [Lesson 4](lessons/04-physics.qmd#static-and-dynamic)
+
+Texture
+: An image loaded into the game, by key. A missing key gives a green-outlined placeholder. [Lesson 2](lessons/02-first-scene.qmd#load-the-files)
+
+Tile, tileset, tilemap
+: A small square image; the image the tiles come from; a grid of tiles that makes a level. [Lesson 6](lessons/06-worlds.qmd)
+
+Tuning file
+: One file holding every number that changes how the game plays, so design can change without touching code. [Lesson 8](lessons/08-mechanics.qmd#tuning-as-data)
+
+Tween
+: Changes a property smoothly from one value to another over time. [Lesson 9](lessons/09-feel.qmd#tweens)
+
+Velocity
+: Speed and direction, in pixels per second. Set it on a body and physics moves it. [Lesson 4](lessons/04-physics.qmd#velocity-not-position)
+
+Vite
+: The tool behind `npm run dev` and `npm run build`: serves the game while you work, and bundles it to ship. [Lesson 1](lessons/01-javascript.qmd#npm-and-vite)
+
+:::
