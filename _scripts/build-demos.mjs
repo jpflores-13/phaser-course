@@ -33,6 +33,13 @@ function newest(dir) {
 }
 
 const games = groups.flatMap((g) => findGames(join(root, g)));
+
+const missing = games.filter((g) => !existsSync(join(g, 'public', 'assets')));
+if (missing.length) {
+  console.error(`No public/assets/ in: ${missing.map((g) => relative(root, g)).join(', ')}`);
+  console.error('Run `python3 _scripts/make_assets.py` to copy the assets into every game folder.');
+  process.exit(1);
+}
 let built = 0;
 
 for (const game of games) {
