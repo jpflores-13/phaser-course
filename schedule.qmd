@@ -1,0 +1,68 @@
+---
+title: "Schedule"
+subtitle: "Three half days, about four hours each."
+---
+
+Times assume a 9:00 start. Shift them as needed. Each day ends at a stopping point, so anyone who missed a session can copy it and pick up the next day.
+
+::: {.schedule}
+
+## Day 1: How a game thinks
+
+| Time | | |
+|---|---|---|
+| 9:00 | Welcome, setup check | Everyone runs `npm run dev` in `starter/` and sees a dark canvas |
+| 9:10 | [0. What a game engine does](lessons/00-engine.qmd) | 20 min |
+| 9:30 | [1. JavaScript for R and Python people](lessons/01-javascript.qmd) | 45 min |
+| 10:15 | *Break* | |
+| 10:25 | [2. Your first scene](lessons/02-first-scene.qmd) | 40 min |
+| 11:05 | **Stopping point A** | A lab floor, a researcher and a freezer on screen |
+| 11:05 | [3. Things that move](lessons/03-movement.qmd) | 50 min |
+| 11:55 | *Break* | |
+| 12:05 | Exercises and questions | |
+| 12:30 | **Stopping point B** | Walk the researcher around and carry a sample to the freezer |
+
+## Day 2: From toy to game
+
+| Time | | |
+|---|---|---|
+| 9:00 | Recap | |
+| 9:10 | [4. Physics](lessons/04-physics.qmd) | 50 min |
+| 10:00 | [5. Assets and animation](lessons/05-assets.qmd) | 45 min |
+| 10:45 | **Stopping point C** | Walls, bouncing carts, a walk cycle and sound |
+| 10:45 | *Break* | |
+| 10:55 | [6. Worlds: tilemaps and cameras](lessons/06-worlds.qmd) | 50 min |
+| 11:45 | Exercises and questions | |
+| 12:30 | **Stopping point D** | The whole lab floor from Tiled, with a camera that follows you |
+
+## Day 3: A game someone else can play
+
+| Time | | |
+|---|---|---|
+| 9:00 | Recap | |
+| 9:10 | [7. Scenes and state](lessons/07-scenes.qmd) | 45 min |
+| 9:55 | [8. Game mechanics](lessons/08-mechanics.qmd) | 45 min |
+| 10:40 | *Break* | |
+| 10:50 | [9. Game feel](lessons/09-feel.qmd) | 40 min |
+| 11:30 | [10. Phones, saves and shipping](lessons/10-ship.qmd) | 45 min |
+| 12:15 | **Stopping point E** | *Cold Chain*, finished and online |
+| 12:15 | Capstone kickoff: pitch a game from your research | 30 min |
+| 12:45 | Wrap-up | |
+| 13:00 | End | |
+
+:::
+
+## Ending at a stopping point
+
+Fell behind, or missed a day? Copy the last stopping point and work from there. From the course folder:
+
+```bash
+cp -r stopping-points/stopB my-cold-chain-b
+cd my-cold-chain-b
+npm install
+npm run dev
+```
+
+## Running it as two full days
+
+Day 1 as above, then day 2 through lesson 6 in the afternoon. Day 3 becomes the second full day, with the capstone kickoff stretched to an hour.

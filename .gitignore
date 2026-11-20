@@ -1,0 +1,29 @@
+# Quarto build output (CI builds the site; see .github/workflows/publish.yml)
+/_site/
+/.quarto/
+/**/*.quarto_ipynb
+/*_files/
+/lessons/*_files/
+/answers/*_files/
+/practice/*_files/
+/field-guide/*_files/
+/prework/*_files/
+# keep: _freeze/
+
+# built games: _scripts/build-demos.mjs makes these before each render
+/_demos/
+
+# node
+node_modules/
+dist/
+
+# your own copies of the game while you follow along
+/my-*/
+
+# editors and OS
+.DS_Store
+.vscode/
+*.swp
+__pycache__/
+
+**/*.quarto_ipynb

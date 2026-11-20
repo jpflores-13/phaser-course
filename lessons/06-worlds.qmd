@@ -1,0 +1,22 @@
+---
+title: "Worlds: tilemaps and cameras"
+subtitle: "Draw the lab in Tiled, load it, and follow the researcher with a camera."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 06-worlds-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 6** · 50 min · [Open the slides for this module](06-worlds-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Build a map in Tiled with tile layers and an object layer.
+- Load a map and make tiles collide by property.
+- Place game objects from an object layer.
+- Make the camera follow the player in a world bigger than the screen.
+:::
+
+**Next:** [Lesson 7: Scenes and state](07-scenes.qmd)

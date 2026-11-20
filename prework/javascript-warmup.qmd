@@ -1,0 +1,7 @@
+---
+title: "JavaScript warm-up"
+subtitle: "Optional, about an hour, before day 1."
+draft: true
+---
+
+For anyone who wants more JavaScript practice than lesson 1 gives. Lesson 1 doesn't assume you did this.

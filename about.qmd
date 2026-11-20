@@ -1,0 +1,46 @@
+---
+title: "About"
+---
+
+**Phaser Course** is a hands-on course in 2D browser games for people who already write code for their research. It was written by JP Flores for the lab, and it's open for anyone to use, teach and adapt.
+
+## How the course is built
+
+- The site is a [Quarto](https://quarto.org) website. Each lesson is one `.qmd` file that renders as a web page and as [reveal.js](https://revealjs.com) slides.
+- Code on the lesson pages is pulled from the game files with a small shortcode, so the code you read is the code that runs.
+- Every game in the course (the starter, the stopping points and the exercise solutions) is built with [Vite](https://vite.dev) before each render and embedded in the pages, so you can play it right there.
+- The art, maps and sound effects were made for the course, by `_scripts/make_assets.py`. Run it again after changing it, and it copies the new files into every game folder.
+- The format follows the [HBC training modules](https://hbctraining.github.io/main/): learning objectives, short lessons, exercises with separate answer keys.
+
+## Versions
+
+| | Version |
+|---|---|
+| Phaser | 4.2.1 |
+| Vite | 8.3.8 |
+| Node.js | 26 |
+| Quarto (to build the site) | 1.9 or newer |
+
+## License {#license}
+
+| What | License |
+|---|---|
+| Lessons, slides, figures and text | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (`LICENSE`) |
+| Code: *Cold Chain*, stopping points, solutions, scripts, site extensions | [MIT](https://opensource.org/license/mit) (`LICENSE-code`) |
+| Sprites, tiles, maps and sounds in `assets/` | [CC0](https://creativecommons.org/publicdomain/zero/1.0/): use them for anything |
+
+## How to cite {#how-to-cite}
+
+If you use or adapt these materials, please cite them:
+
+> Flores JP. *Phaser Course: a hands-on course in 2D browser games.* <https://jpflores-13.github.io/phaser-course/>
+
+A `CITATION.cff` file is in the repository.
+
+## Acknowledgments
+
+Phaser is developed by Phaser Studio and many contributors. Tiled is developed by Thorbjørn Lindeijer and contributors. The course format owes a lot to the Harvard Chan Bioinformatics Core training team and the Carpentries.
+
+## Contributing
+
+Found a mistake, or something that didn't work on your machine? [Open an issue](https://github.com/jpflores-13/phaser-course/issues), or use **Edit this page** at the bottom of any page.

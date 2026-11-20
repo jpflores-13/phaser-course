@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use or adapt this course, please cite it as below."
+type: software
+title: "Phaser Course: a hands-on course in 2D browser games"
+version: 0.1.0
+date-released: 2026-11-20
+authors:
+  - family-names: Flores
+    given-names: JP
+license: CC-BY-4.0
+repository-code: "https://github.com/jpflores-13/phaser-course"
+url: "https://jpflores-13.github.io/phaser-course"
+abstract: >-
+  A three-half-day, hands-on course on building 2D browser games with Phaser 4,
+  for researchers who already code in R or Python. Learners build one small
+  game (Cold Chain) from a blank canvas to a deployed site, then read a real
+  game from Minus 80 Studios. Lessons render as web pages and slides from one
+  Quarto source, with playable exercises and public answer keys.
+keywords:
+  - Phaser
+  - game development
+  - JavaScript
+  - training
+  - Quarto

@@ -1,0 +1,22 @@
+---
+title: "Things that move"
+subtitle: "Use the game loop to move the researcher with the keyboard."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 03-movement-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 3** · 50 min · [Open the slides for this module](03-movement-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Move an object in `update()`, scaled by `delta`.
+- Read the keyboard with cursor keys and `addKeys`.
+- Turn a sprite to face the way it moves.
+- Keep an object on screen with `Clamp`.
+:::
+
+**Next:** [Lesson 4: Physics](04-physics.qmd)

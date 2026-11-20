@@ -1,0 +1,139 @@
+/*-- scss:defaults --*/
+// Cold chain palette: ice blue for the course, amber for warnings, red for thaw
+$ice:      #0e7490 !default;
+$frost:    #38bdf8 !default;
+$amber:    #d97706 !default;
+$thaw:     #dc2626 !default;
+$mint:     #15803d !default;
+
+$primary:    $ice !default;
+$link-color: $ice !default;
+$font-size-base: 0.97rem !default;
+$headings-font-weight: 600 !default;
+$font-family-sans-serif: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !default;
+$font-family-monospace: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace !default;
+$code-block-border-left: $ice !default;
+$callout-border-width: 4px !default;
+$navbar-bg: #ffffff !default;
+$navbar-fg: #343a40 !default;
+$navbar-hl: $ice !default;
+
+/*-- scss:rules --*/
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Source+Sans+3:wght@400;600;700&display=swap");
+
+.navbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.quarto-title-block .quarto-title .title {
+  font-size: 2.2rem;
+}
+
+.callout {
+  border-radius: 6px;
+}
+
+pre.sourceCode, div.sourceCode {
+  border-radius: 6px;
+}
+
+// ---- landing page -------------------------------------------------------
+.hero {
+  padding: 1.5rem 0 0.5rem 0;
+  .lead { font-size: 1.2rem; max-width: 46rem; }
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem 0;
+  > div {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-top: 4px solid $ice;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    p:last-child { margin-bottom: 0; }
+  }
+}
+
+// ---- lesson header line ("Module 2 · 40 min · Slides") -------------------
+.module-line {
+  color: $text-muted;
+  font-size: 0.95rem;
+  margin-top: -0.5rem;
+  strong { color: $ice; }
+}
+
+// ---- schedule tables ----------------------------------------------------
+.schedule table {
+  td:first-child { white-space: nowrap; }
+  tr.stop td { background: rgba($amber, 0.08); }
+  tr.break td { color: $text-muted; font-style: italic; }
+}
+
+// ---- exercises and stopping points ---------------------------------------
+.callout.exercise {
+  border-left-color: $mint !important;
+  .callout-header { background-color: rgba($mint, 0.08) !important; }
+}
+.callout.stopping-point {
+  border-left-color: $amber !important;
+  border-style: solid;
+  border-width: 1px 1px 1px 6px;
+  .callout-header { background-color: rgba($amber, 0.08) !important; }
+}
+.callout.phaser3 {
+  border-left-color: $thaw !important;
+  .callout-header { background-color: rgba($thaw, 0.06) !important; }
+}
+
+// "Answer" links inside exercises render as a small button
+.exercise a[href*="answers/"], a.answer-link {
+  display: inline-block;
+  padding: 0.1rem 0.7rem;
+  border: 1px solid $mint;
+  border-radius: 999px;
+  color: $mint;
+  font-size: 0.9em;
+  font-weight: 600;
+  text-decoration: none;
+  &::after { content: " \2192"; }
+  &:hover { background: $mint; color: #fff; }
+}
+
+// ---- {{< game >}} -----------------------------------------------------------
+.game-embed {
+  margin: 1rem 0 1.5rem 0;
+  .game-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #1e2530;
+    border-radius: 6px;
+    overflow: hidden;
+    iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  }
+  .game-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: $text-muted;
+    margin-top: 0.3rem;
+  }
+}
+
+// ---- {{< snippet >}} --------------------------------------------------------
+.snippet {
+  margin-bottom: 1rem;
+  div.sourceCode { margin-bottom: 0.2rem; }
+}
+.snippet-source {
+  font-size: 0.8rem;
+  text-align: right;
+  color: $text-muted;
+  .snippet-where { margin-right: 0.5em; }
+}
+
+// ---- side-by-side language tabs -------------------------------------------
+.panel-tabset .nav-link { font-family: $font-family-monospace; font-size: 0.85rem; }

@@ -1,0 +1,75 @@
+---
+title: "Module 2 answers"
+subtitle: "Your first scene"
+---
+
+Back to [Module 2](../lessons/02-first-scene.qmd).
+
+## Exercise 2.1: Build it — put a sample on the bench {#ex-2.1}
+
+Two lines. One in `preload()` to load the file, one in `create()` to show it.
+
+```js
+preload() {
+  this.load.setPath('assets');
+  // ...the other files...
+  this.load.image('tube', 'sprites/tube.png'); // <1>
+}
+
+create() {
+  const { width, height } = this.scale;
+  // ...the floor and the freezer...
+  this.add.image(140, height / 2, 'tube').setScale(2); // <2>
+  // ...the researcher...
+}
+```
+1. `load.image`, not `load.spritesheet`: the tube is one picture, not a grid of frames. The key `'tube'` is what you'll use from now on.
+2. `height / 2` is the researcher's `y`, so they line up. The researcher has `setScale(2)`, so the tube needs it too to be the same size. Adding it before the researcher means the researcher draws on top if you ever walk over it.
+
+{{< game solutions/02/ex-2.1 caption="The tube, on the left." >}}
+
+The full file is in `solutions/02/ex-2.1/`.
+
+## Exercise 2.2: Predict it — the corner freezer {#ex-2.2}
+
+You see **one quarter** of the freezer: its bottom-right quarter, tucked into the top-left corner.
+
+An image's origin is its middle, so `(0, 0)` puts the *middle* of the freezer on the corner of the game. The other three quarters are off screen.
+
+To put the freezer's top-left corner on the game's corner, move the origin:
+
+```js
+this.add.image(0, 0, 'freezer').setOrigin(0, 0);
+```
+
+This is the most common surprise for people coming from plotting libraries, where a point usually means a corner. In Phaser, ask "where is the origin?" every time something lands in the wrong place.
+
+## Exercise 2.3: Spot the bug — the green box {#ex-2.3}
+
+The key is `'freezer'` in `preload()` and `'Freezer'` in `create()`. Keys are case-sensitive, so `'Freezer'` doesn't exist.
+
+When you ask for a texture that doesn't exist, Phaser doesn't throw an error. It uses a built-in placeholder texture called `__MISSING`: a 32 × 32 box with a green outline. That's why the console is quiet. The box is also small because the placeholder is 32 × 32, and `setScale(2)` makes it 64 × 64, not the 128 × 128 the real freezer would be.
+
+Fix it by using the same key in both places:
+
+```js
+this.add.image(840, 270, 'freezer', 0).setScale(2);
+```
+
+To check what texture an object really has, use the console:
+
+```js
+game.scene.getScene('Play').children.list.map((o) => o.texture?.key);
+// [..., '__MISSING', ...]
+```
+
+## Exercise 2.4: Tune it — sharp or blurry {#ex-2.4}
+
+With `pixelArt: false`, the scaled-up researcher is blurry. With `true`, every pixel is a crisp square.
+
+Scaling an image means inventing pixels that weren't there. Phaser (really, the GPU) can do that two ways:
+
+- **Linear filtering** blends neighbouring pixels. Smooth gradients for photos and painted art, mush for pixel art. This is what `pixelArt: false` uses.
+- **Nearest-neighbour filtering** copies the nearest pixel. Hard edges, which is what pixel art wants. `pixelArt: true` switches every texture to this.
+
+You'd want `false` for a game with high-resolution, painted or vector-style art, which looks jagged with nearest-neighbour. *Snail Assassin* goes the other way: its sprites are drawn tiny and scaled up four times, with `pixelArt: true` (see `src/config/gameConfig.ts` in its repository). You can also mix: keep `pixelArt: false` and switch one texture with `this.textures.get('researcher').setFilter(Phaser.Textures.FilterMode.NEAREST)`.

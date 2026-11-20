@@ -1,0 +1,225 @@
+---
+title: "Your first scene"
+subtitle: "Configure a game, load files, and put a lab on the screen."
+format:
+  html: default
+  revealjs:
+    output-file: 02-first-scene-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 2** · 40 min · [Open the slides for this module](02-first-scene-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Read a Phaser game config and say what each part does.
+- Explain what `preload()`, `create()` and `update()` are for, and when each one runs.
+- Load an image and a spritesheet, then place them with `this.add`.
+- Predict where an object appears from its position and its origin.
+:::
+
+## Where you work
+
+Everything you build in the course goes in your own copy of the starter. If you did the [setup](../setup.qmd), you have it already:
+
+```bash
+cd phaser-course/my-cold-chain
+npm run dev
+```
+
+Open the address Vite prints. A dark rectangle means the game is running and has nothing in it yet.
+
+::: {.content-hidden when-format="revealjs"}
+Keep that tab open. Every time you save a file, Vite reloads the page for you, so the loop for the whole course is: edit, save, look.
+:::
+
+## What's in the folder
+
+```
+my-cold-chain/
+├── index.html          the page the game lives in
+├── package.json        the project: its name, its dependencies (Phaser, Vite)
+├── vite.config.js      build settings
+├── public/assets/      sprites, tiles, maps and sounds
+└── src/
+    ├── main.js         makes the game
+    └── scenes/
+        └── Play.js     one scene: what's on screen and what it does
+```
+
+::: {.content-hidden when-format="revealjs"}
+You'll spend almost all your time in `src/`. `public/assets/` is served as-is, so a file at `public/assets/sprites/tube.png` is at the address `assets/sprites/tube.png`.
+:::
+
+## The game config
+
+`src/main.js` makes one `Phaser.Game`. The config object tells it how big to be, where to go on the page, and which scenes exist.
+
+{{< snippet file="stopping-points/stopA/src/main.js" lines="1-20" >}}
+
+::: {.content-hidden when-format="revealjs"}
+- `width` and `height` are the size of the game in **game pixels**. The `scale` block then stretches that to fit the browser window, so 960 × 540 is your coordinate system no matter how big the window is.
+- `pixelArt: true` keeps small sprites sharp when they're scaled up. Without it, they blur. (Exercise 2.4.)
+- `scene` is a list. The first scene in the list starts on its own. You'll add more scenes in lesson 7.
+- The last line puts the game on `window` while you develop, so you can poke at it from the browser console: try `game.scene.getScene('Play')`.
+:::
+
+## A scene and its lifecycle
+
+A scene is a class with three methods that Phaser calls for you. You never call them yourself.
+
+```{mermaid}
+%%| fig-cap: "What Phaser calls, and when."
+%%| fig-width: 9
+flowchart LR
+  A["preload()<br/>ask for files"] --> B["create()<br/>build the scene, once"]
+  B --> C["update(time, delta)<br/>every frame, ~60 times a second"]
+  C --> C
+```
+
+::: {.content-hidden when-format="revealjs"}
+`preload()` runs first and *queues* files. Phaser downloads them all, and only when every file has arrived does it call `create()`. That's why you can't put an image on screen in `preload()`: the image isn't there yet.
+
+`update()` is the game loop from [lesson 0](00-engine.qmd). It's empty today, and lesson 3 fills it.
+:::
+
+## Load the files
+
+{{< snippet file="stopping-points/stopA/src/scenes/Play.js" method="preload" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Every file gets a **key**, the first argument. From now on you refer to the file by its key, never by its path.
+
+- `load.image` is one picture.
+- `load.spritesheet` is one picture cut into a grid of equal frames. The researcher sheet is 12 frames of 32 × 32: walking down, up and sideways. The lab tileset is 9 tiles. The freezer has two: door shut and door open.
+- `setPath('assets')` saves typing the folder on every line.
+:::
+
+## Put things on the screen
+
+{{< snippet file="stopping-points/stopA/src/scenes/Play.js" method="create" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`this.add` is the factory for everything you can see. Each call makes a **game object**, puts it on screen and returns it, so you can keep it (`this.player = ...`) and change it later.
+
+- `tileSprite` repeats one frame to fill an area. Here, frame 0 of the tileset (a floor tile) fills the whole game.
+- `image` shows a texture, or one frame of a spritesheet.
+- `sprite` is an image that can also play animations. You'll need that in lesson 5.
+- `text` draws text. Fonts are CSS fonts.
+
+Most setters return the object itself, so they chain: `this.add.image(...).setScale(2).setAlpha(0.5)`.
+:::
+
+## Where things go
+
+The origin of the game is the **top-left** corner. `x` grows to the right and `y` grows **down**.
+
+An object's position is where its **origin** sits. For images and sprites the origin is the middle `(0.5, 0.5)`. For text it's the top-left `(0, 0)`.
+
+::: {.content-hidden when-format="revealjs"}
+That's why the title uses `.setOrigin(0.5)`: centring text on `width / 2` only works if the origin is the middle of the text. It's also why the floor uses `.setOrigin(0, 0)`: a tile sprite at `(0, 0)` with a centred origin would hang off the top-left corner.
+
+Drag the sliders to see how position and origin work together. The dot is the position. The box is the freezer at `setScale(2)`, 128 × 128.
+
+```{ojs}
+//| echo: false
+viewof x = Inputs.range([0, 960], {value: 480, step: 10, label: "x"})
+viewof y = Inputs.range([0, 540], {value: 270, step: 10, label: "y"})
+viewof ox = Inputs.range([0, 1], {value: 0.5, step: 0.25, label: "originX"})
+viewof oy = Inputs.range([0, 1], {value: 0.5, step: 0.25, label: "originY"})
+```
+
+```{ojs}
+//| echo: false
+{
+  const w = 128, h = 128; // the freezer at setScale(2)
+  return htl.svg`<svg viewBox="0 0 960 540" style="width:100%;max-width:720px;background:#d8dee6;border-radius:6px">
+    <defs><pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#bcc5d1" stroke-width="1"/></pattern></defs>
+    <rect width="960" height="540" fill="url(#grid)"/>
+    <rect x=${x - ox * w} y=${y - oy * h} width=${w} height=${h} fill="#f1f5f9" stroke="#2b2433" stroke-width="4"/>
+    <circle cx=${x} cy=${y} r="8" fill="#dc2626"/>
+    <text x="12" y="28" font-family="monospace" font-size="22" fill="#0f172a">(0, 0)</text>
+    <text x=${x + 14} y=${y - 12} font-family="monospace" font-size="22" fill="#dc2626">(${x}, ${y})</text>
+  </svg>`;
+}
+```
+:::
+
+## Draw order
+
+Objects are drawn in the order you add them, so the last one added is on top. The researcher is added after the floor, so it stands *on* the floor rather than under it.
+
+```js
+this.player.setDepth(10); // higher depth draws on top, whatever the order
+```
+
+::: {.content-hidden when-format="revealjs"}
+`setDepth` matters once objects move past each other. You'll use it in lesson 6, when the researcher walks behind benches.
+:::
+
+## What you have
+
+Your game should now look like this. If it doesn't, compare your files with `stopping-points/stopA/`.
+
+{{< game stopping-points/stopA caption="Stopping point A. Nothing moves yet: that's lesson 3." >}}
+
+::: {.callout-tip title="Stopping point A" .stopping-point}
+To catch up, copy `stopping-points/stopA` and run it:
+
+```bash
+cp -r stopping-points/stopA my-cold-chain-a
+cd my-cold-chain-a && npm install && npm run dev
+```
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 2.1: Build it — put a sample on the bench" .exercise #ex-2.1}
+`public/assets/sprites/tube.png` is a sample tube, a single 32 × 32 image. Load it and put it on the left side of the screen, at the same height as the researcher, the same size as the researcher.
+
+[Answer](../answers/02-first-scene-answers.qmd#ex-2.1)
+:::
+
+::: {.callout-tip title="Exercise 2.2: Predict it — the corner freezer" .exercise #ex-2.2}
+You add this line at the end of `create()`. Without running it, sketch what you'll see in the top-left corner. Then run it.
+
+```js
+this.add.image(0, 0, 'freezer');
+```
+
+[Answer](../answers/02-first-scene-answers.qmd#ex-2.2)
+:::
+
+::: {.callout-tip title="Exercise 2.3: Spot the bug — the green box" .exercise #ex-2.3}
+A labmate's game shows a small box with a green outline where the freezer should be. The console has no errors. Here's their scene. What's wrong?
+
+```js
+preload() {
+  this.load.setPath('assets');
+  this.load.spritesheet('freezer', 'sprites/freezer.png', { frameWidth: 64, frameHeight: 64 });
+}
+
+create() {
+  this.add.image(840, 270, 'Freezer', 0).setScale(2);
+}
+```
+
+[Answer](../answers/02-first-scene-answers.qmd#ex-2.3)
+:::
+
+::: {.callout-tip title="Exercise 2.4: Tune it — sharp or blurry" .exercise #ex-2.4}
+Set `pixelArt: false` in `main.js` and scale the researcher up to 6. Then put it back to `true`. What changes, and why would you ever want `false`?
+
+[Answer](../answers/02-first-scene-answers.qmd#ex-2.4)
+:::
+
+## Key points
+
+- A game is a `Phaser.Game` made from a config: size, scaling, and a list of scenes.
+- A scene's `preload()` queues files, `create()` builds the scene once they've loaded, and `update()` runs every frame.
+- Files are loaded once and then used by **key**. A wrong key gives a green-outlined box, not an error.
+- Position is where the **origin** goes. Images and sprites default to the middle, text to the top-left.
+- Later objects draw on top, unless you set a depth.
+
+**Next:** [Lesson 3: Things that move](03-movement.qmd)

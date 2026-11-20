@@ -1,0 +1,22 @@
+---
+title: "JavaScript for R and Python people"
+subtitle: "Just enough JavaScript to read and write a Phaser game."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 01-javascript-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 1** · 45 min · [Open the slides for this module](01-javascript-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Use `const`, `let`, arrow functions, objects and arrays.
+- Write a class with a constructor, use `this`, and extend another class.
+- Import and export between files.
+- Use the browser console as a REPL.
+:::
+
+**Next:** [Lesson 2: Your first scene](02-first-scene.qmd)

@@ -1,0 +1,21 @@
+---
+title: "What a game engine does"
+subtitle: "A game is a loop that runs sixty times a second. Everything else follows from that."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 00-engine-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 0** · 20 min · [Open the slides for this module](00-engine-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Describe the game loop: read input, update the world, draw the frame.
+- Explain why movement is scaled by the time between frames.
+- Say what Phaser does for you and what you write yourself.
+:::
+
+**Next:** [Lesson 1: JavaScript for R and Python people](01-javascript.qmd)

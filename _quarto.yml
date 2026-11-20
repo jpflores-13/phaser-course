@@ -1,0 +1,150 @@
+project:
+  type: website
+  output-dir: _site
+  # builds every game in the course into _demos/ so pages can embed them
+  pre-render: node _scripts/build-demos.mjs
+  render:
+    - index.qmd
+    - schedule.qmd
+    - setup.qmd
+    - about.qmd
+    - "prework/*.qmd"
+    - "lessons/*.qmd"
+    - "answers/*.qmd"
+    - "practice/*.qmd"
+    - "field-guide/*.qmd"
+  resources:
+    - "_demos/**"
+
+execute:
+  freeze: auto
+
+lang: en-US
+language:
+  related-formats-title: "Also as"
+
+website:
+  title: "Phaser Course"
+  description: "A hands-on course in 2D browser games with Phaser 4, for people who already code: three half days, slides, exercises and answer keys."
+  site-url: https://jpflores-13.github.io/phaser-course
+  repo-url: https://github.com/jpflores-13/phaser-course
+  repo-actions: [edit, issue]
+  page-navigation: true
+  bread-crumbs: true
+  back-to-top-navigation: true
+  search:
+    location: navbar
+    type: overlay
+  navbar:
+    background: light
+    collapse-below: lg
+    left:
+      - text: Home
+        href: index.qmd
+      - text: Schedule
+        href: schedule.qmd
+      - text: Setup
+        href: setup.qmd
+      - text: Lessons
+        menu:
+          - text: "0. What a game engine does"
+            href: lessons/00-engine.qmd
+          - text: "1. JavaScript for R and Python people"
+            href: lessons/01-javascript.qmd
+          - text: "2. Your first scene"
+            href: lessons/02-first-scene.qmd
+          - text: "3. Things that move"
+            href: lessons/03-movement.qmd
+          - text: "---"
+          - text: "4. Physics"
+            href: lessons/04-physics.qmd
+          - text: "5. Assets and animation"
+            href: lessons/05-assets.qmd
+          - text: "6. Worlds: tilemaps and cameras"
+            href: lessons/06-worlds.qmd
+          - text: "---"
+          - text: "7. Scenes and state"
+            href: lessons/07-scenes.qmd
+          - text: "8. Game mechanics"
+            href: lessons/08-mechanics.qmd
+          - text: "9. Game feel"
+            href: lessons/09-feel.qmd
+          - text: "10. Phones, saves and shipping"
+            href: lessons/10-ship.qmd
+      - text: Answers
+        menu:
+          - text: "2. Your first scene"
+            href: answers/02-first-scene-answers.qmd
+      - text: About
+        href: about.qmd
+    right:
+      - icon: github
+        href: https://github.com/jpflores-13/phaser-course
+        aria-label: Course repository on GitHub
+
+  sidebar:
+    - id: lessons
+      title: "Lessons"
+      style: docked
+      collapse-level: 2
+      contents:
+        - section: "Before day 1"
+          contents:
+            - setup.qmd
+            - prework/javascript-warmup.qmd
+        - section: "Day 1"
+          contents:
+            - lessons/00-engine.qmd
+            - lessons/01-javascript.qmd
+            - lessons/02-first-scene.qmd
+            - lessons/03-movement.qmd
+        - section: "Day 2"
+          contents:
+            - lessons/04-physics.qmd
+            - lessons/05-assets.qmd
+            - lessons/06-worlds.qmd
+        - section: "Day 3"
+          contents:
+            - lessons/07-scenes.qmd
+            - lessons/08-mechanics.qmd
+            - lessons/09-feel.qmd
+            - lessons/10-ship.qmd
+    - id: answers
+      title: "Answer keys"
+      style: docked
+      contents:
+        - section: "Answer keys"
+          contents:
+            - answers/02-first-scene-answers.qmd
+
+  page-footer:
+    left: "Phaser Course, by JP Flores. Lessons [CC BY 4.0](/about.qmd#license), code [MIT](/about.qmd#license)."
+    right:
+      - text: Cite
+        href: about.qmd#how-to-cite
+
+format:
+  html:
+    theme:
+      light: [cosmo, styles/theme.scss]
+      dark: [cosmo, styles/theme.scss, styles/theme-dark.scss]
+    respect-user-color-scheme: true
+    highlight-style:
+      light: github
+      dark: github-dark
+    code-copy: true
+    code-overflow: wrap
+    code-annotations: below
+    code-block-bg: true
+    code-block-border-left: true
+    toc: true
+    toc-depth: 2
+    toc-title: "On this page"
+    smooth-scroll: true
+    anchor-sections: true
+    link-external-icon: true
+    link-external-newwindow: true
+    lightbox: auto
+    callout-appearance: default
+    format-links:
+      - {format: revealjs, text: Slides, icon: easel}

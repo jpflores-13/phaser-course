@@ -1,0 +1,22 @@
+---
+title: "Assets and animation"
+subtitle: "Load everything up front and bring the researcher to life."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 05-assets-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 5** · 45 min · [Open the slides for this module](05-assets-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Load images, spritesheets and audio, with a progress bar.
+- Make walk animations from a spritesheet.
+- Pick an animation from the player's state.
+- Play sounds, and know about the browser's autoplay rule.
+:::
+
+**Next:** [Lesson 6: Worlds: tilemaps and cameras](06-worlds.qmd)

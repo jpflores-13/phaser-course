@@ -1,0 +1,22 @@
+---
+title: "Game feel"
+subtitle: "Tweens, particles, shake and hit-stop: the difference between working and fun."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 09-feel-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 9** · 40 min · [Open the slides for this module](09-feel-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Animate any property with a tween and an ease.
+- Use timers and delayed calls.
+- Emit particles, once and continuously.
+- Add camera shake and hit-stop, and know when to stop.
+:::
+
+**Next:** [Lesson 10: Phones, saves and shipping](10-ship.qmd)

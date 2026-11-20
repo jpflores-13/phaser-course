@@ -1,0 +1,20 @@
+---
+title: "Phones, saves and shipping"
+subtitle: "Make the game work on a phone, remember a best time, and put it online."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 10-ship-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 10** · 45 min · [Open the slides for this module](10-ship-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Scale the game to any screen and handle orientation.
+- Add touch controls.
+- Save and load with `localStorage`.
+- Build the game and deploy it to GitHub Pages.
+:::

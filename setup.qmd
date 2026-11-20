@@ -1,0 +1,85 @@
+---
+title: "Setup"
+subtitle: "Install Node.js, get the course files, and check that a game runs before day 1."
+---
+
+You need about 20 minutes and 1 GB of disk. Everything works the same on macOS, Linux and Windows.
+
+## 1. Install Node.js 26
+
+Phaser games are web pages, but you build them with [Node.js](https://nodejs.org) tools.
+
+::: {.panel-tabset}
+## macOS
+
+Download the macOS installer from [nodejs.org](https://nodejs.org/en/download). Or, with [Homebrew](https://brew.sh):
+
+```bash
+brew install node@26
+```
+
+Homebrew then prints a line to add Node to your `PATH`. Run it, and open a new terminal.
+
+## Windows
+
+Download the Windows installer from [nodejs.org](https://nodejs.org/en/download) and keep the default options. Use **PowerShell** or **Git Bash** for the commands on this page.
+
+## Linux
+
+Use your package manager, or the official binaries from [nodejs.org](https://nodejs.org/en/download).
+:::
+
+## 2. Install the other tools
+
+- **git**, to get the course files. Check with `git --version`.
+- **A code editor.** [VS Code](https://code.visualstudio.com) is a good choice, but any editor works.
+- **[Tiled](https://www.mapeditor.org)**, the free map editor. You need it on day 2.
+- **A current browser.** Chrome, Firefox, Safari and Edge all work. You'll use its developer tools a lot.
+
+## 3. Get the course files
+
+```bash
+git clone https://github.com/jpflores-13/phaser-course.git
+cd phaser-course
+```
+
+## 4. Make your copy of the game and run it
+
+You build *Cold Chain* in your own folder, starting from `starter/`:
+
+```bash
+cp -r starter my-cold-chain
+cd my-cold-chain
+npm install
+npm run dev
+```
+
+`npm install` downloads Phaser and Vite into `node_modules/`. `npm run dev` starts a local web server and prints an address:
+
+```
+  VITE v8.3.8  ready in 322 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+```
+
+Open that address. You should see a dark rectangle in the middle of the page. That's an empty game, and it's exactly what you want. Press `Ctrl` + `C` in the terminal to stop the server.
+
+## 5. Check the versions
+
+```bash
+node --version      # v26.x.x
+npm ls phaser       # phaser@4.2.1
+```
+
+The Phaser version matters. Most tutorials and answers online are for Phaser 3, and a few things changed in 4. The course points out the differences as you meet them.
+
+## If something goes wrong
+
+**`npm: command not found`.** Node isn't on your `PATH`. Close the terminal and open a new one after installing. On Windows, restart the computer.
+
+**`npm run dev` says the port is in use.** Another dev server is running. Stop it, or Vite picks the next free port and prints it.
+
+**The page is blank and white, not dark.** Open the browser's developer tools (`F12`, or `Cmd` + `Option` + `I` on a Mac) and look at the **Console** tab. The red error there is the place to start. Bring it to day 1 if you can't solve it.
+
+**`EACCES` or permission errors from npm.** Don't use `sudo`. Reinstall Node with the official installer or Homebrew, which set permissions correctly.

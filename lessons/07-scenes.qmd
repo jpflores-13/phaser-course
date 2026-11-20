@@ -1,0 +1,22 @@
+---
+title: "Scenes and state"
+subtitle: "Split the game into a title, a level, a HUD and a results screen."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 07-scenes-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 7** · 45 min · [Open the slides for this module](07-scenes-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Start, launch, stop and restart scenes.
+- Run two scenes at once: the level and the HUD on top.
+- Pass data between scenes with `start(key, data)` and the registry.
+- Decide where a piece of game state should live.
+:::
+
+**Next:** [Lesson 8: Game mechanics](08-mechanics.qmd)

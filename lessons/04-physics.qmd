@@ -1,0 +1,22 @@
+---
+title: "Physics"
+subtitle: "Let Arcade physics handle walls, collisions and bouncing carts."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 04-physics-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 4** · 50 min · [Open the slides for this module](04-physics-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Give a game object a physics body.
+- Use velocity, acceleration and drag to make movement feel right.
+- Tell `collider` from `overlap`, and react to both.
+- Use groups and the debug overlay.
+:::
+
+**Next:** [Lesson 5: Assets and animation](05-assets.qmd)

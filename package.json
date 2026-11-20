@@ -1,0 +1,19 @@
+{
+  "name": "phaser-course",
+  "private": true,
+  "description": "Course site tooling: builds every playable demo that the lessons embed.",
+  "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "demos": "node _scripts/build-demos.mjs",
+    "assets": "python3 _scripts/make_assets.py"
+  },
+  "dependencies": {
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.8"
+  }
+}

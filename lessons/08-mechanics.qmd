@@ -1,0 +1,22 @@
+---
+title: "Game mechanics"
+subtitle: "Turn a moving sprite into a game: verbs, goals, risk and difficulty."
+draft: true
+format:
+  html: default
+  revealjs:
+    output-file: 08-mechanics-slides.html
+---
+
+::: {.module-line .content-visible when-format="html"}
+**Module 8** · 45 min · [Open the slides for this module](08-mechanics-slides.html)
+:::
+
+::: {.callout-note title="Learning objectives"}
+- Describe a game as verbs, goals and obstacles.
+- Find a game's core loop.
+- Design a risk and reward choice.
+- Pull every balance number into one tuning file, and tune it.
+:::
+
+**Next:** [Lesson 9: Game feel](09-feel.qmd)

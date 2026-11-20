@@ -1,0 +1,74 @@
+---
+title: "Phaser Course"
+subtitle: "Build a 2D browser game in three half days."
+toc: false
+page-layout: full
+---
+
+::: {.hero}
+::: {.lead}
+A hands-on course in [Phaser 4](https://phaser.io), the JavaScript game framework, for people who already write code for their research. You build one small game across the course, put it online, and leave knowing how every 2D game engine works under the hood.
+:::
+
+[Start with lesson 0](lessons/00-engine.qmd){.btn .btn-primary} [Set up your laptop](setup.qmd){.btn .btn-outline-primary}
+:::
+
+## The game you'll build
+
+You've got samples on ice and a long walk to the −80. Get them into the freezer before they thaw. Dodge the carts, don't slip on the spill, and grab dry ice to buy time.
+
+{{< game stopping-points/stopE caption="Cold Chain, the finished game. Click it, then press space." >}}
+
+Every lesson adds one visible thing to *Cold Chain*: a sprite, then movement, walls, a map, menus, rules, and finally the polish that makes it feel good. If you fall behind, copy a stopping point and keep going.
+
+## Who this is for
+
+- You write code for your research, in R, Python or both.
+- You've never built a game, and you haven't written much JavaScript.
+- You want to make something small: a teaching game, an outreach piece, a figure people can play with.
+
+No game experience, art skills or JavaScript background needed. Lesson 1 covers the JavaScript you need.
+
+## What's in the course
+
+::: {.cards}
+::: {}
+**11 lessons**
+
+Each one is a web page and a slide deck from the same source, with exercises in four flavors: build it, predict it, spot the bug, tune it.
+:::
+
+::: {}
+**Answer keys**
+
+Every exercise has a worked answer that explains the *why*. The ones you build are playable right on the answer page.
+:::
+
+::: {}
+**Five stopping points**
+
+Complete copies of the game at the end of each block, so nobody gets left behind.
+:::
+
+::: {}
+**A real game to read**
+
+The field guide walks through *Snail Assassin* from [Minus 80 Studios](https://jpflores-13.github.io/Minus80Studios/), a game that wasn't written for teaching.
+:::
+:::
+
+## Three half days
+
+| | Lessons | You leave with |
+|---|---|---|
+| **Day 1: How a game thinks** | 0. What a game engine does · 1. JavaScript for R and Python people · 2. Your first scene · 3. Things that move | A researcher you can walk around the lab |
+| **Day 2: From toy to game** | 4. Physics · 5. Assets and animation · 6. Worlds: tilemaps and cameras | A lab floor with walls, carts, spills and a camera |
+| **Day 3: A game someone else can play** | 7. Scenes and state · 8. Game mechanics · 9. Game feel · 10. Phones, saves and shipping | A finished game at your own URL, and a capstone idea |
+
+The full timetable is on the [schedule](schedule.qmd).
+
+## Using the course
+
+- **Teaching it?** Open the slides from any lesson (the *Slides* link under "Also as"). Press `s` for speaker notes and `f` for full screen. Games in the slides are playable.
+- **On your own?** Read the lesson pages, try every exercise before opening the answer, and use the stopping points to check your work.
+- **Want more JavaScript first?** Do the optional [JavaScript warm-up](prework/javascript-warmup.qmd) before day 1.
