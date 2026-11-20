@@ -191,7 +191,7 @@ A minute later the game is at `https://<your-username>.github.io/<repository>/`.
 
 ## Where next
 
-- **TypeScript.** *Snail Assassin* is written in it, and the field guide shows how to read it. Types catch the `this` and typo bugs from earlier lessons before you run anything.
+- **TypeScript.** *Snail Assassin* is written in it, and the [field guide](../field-guide/01-typescript.qmd) shows how to read it. Types catch the `this` and typo bugs from earlier lessons before you run anything.
 - **[Phaser examples](https://phaser.io/examples)** and the **[API docs](https://docs.phaser.io)**: hundreds of small working examples, most still Phaser 3 but nearly all of them work in 4.
 - **Matter physics**, for things that tumble and stack.
 - **Your capstone**: the index card from lesson 8.
@@ -256,4 +256,4 @@ In device mode (or on a real phone), try the joystick with a radius of 30, 56 an
 - `npm run build` makes `dist/`. Use `base: './'` so it works from any folder.
 - A GitHub Action can build and publish your game on every push.
 
-**Next:** your capstone, and the field guide to *Snail Assassin*.
+**Next:** your [capstone](../practice/capstone.qmd), and the [field guide](../field-guide/index.qmd) to *Snail Assassin*.

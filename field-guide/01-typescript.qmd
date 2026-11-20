@@ -1,0 +1,97 @@
+---
+title: "Reading TypeScript"
+subtitle: "Enough to read the code, and to ignore the types until you want them."
+---
+
+*Snail Assassin* is written in **TypeScript**: JavaScript with **types** added. The types say what kind of value each variable, argument and property holds. Before the game runs, Vite strips them all out, and what's left is ordinary JavaScript.
+
+So you can read TypeScript as JavaScript: **skip everything after a colon, up to the next `,`, `)`, `=` or `{`.**
+
+## Annotations
+
+```ts
+export function wrap(v: number, size: number): number {
+  return ((v % size) + size) % size;
+}
+```
+
+Read it as `function wrap(v, size) { ... }`. The `: number` after each argument says it must be a number; the one after the `)` says the function returns a number. If you call `wrap('left', 10)`, your editor underlines it in red before you ever run the game.
+
+## Describing an object: `interface`
+
+{{< snippet repo="minus80" file="snail-assassin/src/systems/predator.ts" method="Predator" >}}
+
+An `interface` is a description of an object's shape: which properties it has and what type each one is. It produces no code at all. Wherever a `Predator` is expected, TypeScript checks the object really has a `pos`, a `mode`, and so on.
+
+`Vec2` is another interface defined in the game: `{ x: number; y: number }`.
+
+## A list of allowed values
+
+{{< snippet repo="minus80" file="snail-assassin/src/systems/predator.ts" method="PredatorMode" >}}
+
+A **union** of strings: a `PredatorMode` can only ever be one of those three words. Write `o.mode = 'chasing'` and it's an error, not a bug you find a week later. In *Cold Chain*, `this.facing` is a string that's supposed to be `'down'`, `'up'` or `'side'`; nothing stops a typo. This is the kind of mistake types catch.
+
+## Classes with types
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/HuntScene.ts" lines="36-62" >}}
+
+Mostly familiar from [lesson 1](../lessons/01-javascript.qmd#classes), with additions:
+
+- `private state!: HuntState;` declares a property that will be set later (in `create`), and says what type it holds.
+- `private` means only this class may use it.
+- `readonly` means it's set once and never changed.
+- `!` after a name means "trust me, this will be set before it's used".
+- `TouchControls | null` means "a `TouchControls`, or `null`": the `|` reads as *or*.
+- `new Map<number, Phaser.GameObjects.Image>()` is a `Map` from numbers to images. The angle brackets give the types of its keys and values.
+- `override update(...)` replaces a method `Phaser.Scene` already has.
+
+*Cold Chain* declares its properties by assigning them in `create()`. TypeScript wants them listed at the top of the class, with their types, which doubles as a list of everything the scene keeps track of.
+
+## Imports of types
+
+```ts
+import type { CharacterConfig } from '../characters/types';
+```
+
+`import type` brings in only a type, for checking. It disappears completely from the built game.
+
+## A constant that stays exact
+
+```ts
+export const PALETTE = {
+  navy: 0x06192b,
+  // ...
+} as const;
+```
+
+`as const` tells TypeScript the object will never change, so it can treat every value as exact. You can read it as "this is a fixed table".
+
+## Why bother?
+
+Look back at the bugs in this course's exercises: a misspelt texture key ([2.3](../lessons/02-first-scene.qmd#exercises)), `this` in the wrong place ([1.4](../lessons/01-javascript.qmd#exercises)), a missing `true` ([5.3](../lessons/05-assets.qmd#exercises)). Types don't catch all of them, but they catch a lot of that family, in the editor, as you type. In a 600-line game that's a convenience. In a 4,500-line one, it's what keeps the code changeable.
+
+You don't have to use TypeScript for your capstone. But a Vite project can switch at any time: rename `main.js` to `main.ts`, and start adding types where they help.
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F1.1: Read it as JavaScript" .exercise #ex-f1.1}
+Rewrite this method from `HuntScene.ts` as plain JavaScript, the way it would look in *Cold Chain*:
+
+```ts
+private pauseHunt(): void {
+  if (this.ended) return;
+  this.scene.launch('Pause', { characterId: this.character.id });
+  this.scene.pause();
+}
+```
+
+[Answer](../answers/field-guide-answers.qmd#ex-f1.1)
+:::
+
+::: {.callout-tip title="Exercise F1.2: What can it be?" .exercise #ex-f1.2}
+Open `src/config/settings.ts`. What are the allowed values of an `Action`? What type is `Settings.volume`, and which `Settings` properties are lists?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f1.2)
+:::
+
+**Next:** [The layout](02-layout.qmd)

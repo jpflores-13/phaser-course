@@ -1,0 +1,69 @@
+---
+title: "Phones and saves"
+subtitle: "Touch controls that survive real phones, and settings that survive a reload."
+---
+
+[Lesson 10](../lessons/10-ship.qmd) gave *Cold Chain* a floating joystick and a saved best time. *Snail Assassin* goes further on both, and its code comments say why: each extra piece is a fix for something that went wrong on a real device.
+
+## More than a joystick
+
+{{< snippet repo="minus80" file="snail-assassin/src/input/TouchControls.ts" lines="20-27" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Three ways to move and aim, because a snail game is played slowly and deliberately:
+
+- a **joystick** on the left, like *Cold Chain*'s;
+- **hold to crawl**: press and hold anywhere on the reef, and after 220 ms the snail crawls toward your finger, so one finger is enough to play;
+- **tap to aim**: a quick tap sets where abilities fire.
+
+The last paragraph of that comment is the kind of thing you only learn by testing on phones: mobile Safari doesn't always send `pointermove` and `pointerup` events reliably, so the controls read the pointers' positions every frame instead of waiting for events. *Cold Chain*'s `TouchStick` relies on those events, which is fine for a course game and worth knowing before you ship one.
+:::
+
+## One input, many devices
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/HuntScene.ts" lines="186-189" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The keyboard produces a `HuntInput`. Touch takes that and overrides what it needs. The accessibility assist takes the result and adjusts the aim. The hunt only ever sees one `HuntInput`, and never knows which device it came from. That's the same idea as *Cold Chain*'s direction vector ([lesson 10](../lessons/10-ship.qmd#touch)), extended to every action.
+
+There's also a safety net in `create()`: some browsers don't say they support touch until the first touch, so the game turns touch controls on at the first `pointerdown` that `wasTouch`.
+:::
+
+## Full screen, where allowed
+
+{{< snippet repo="minus80" file="snail-assassin/src/ui/fullscreen.ts" method="toggleFullscreen" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`startFullscreen` hides the browser's bars on Android, tablets and desktops. On a phone, it then asks to lock the screen sideways; if the browser says no, `.catch(() => undefined)` quietly ignores it. iPhones don't allow full screen for web pages at all, so the game also ships a web app manifest: "Add to Home Screen" opens it full screen and sideways.
+:::
+
+## Settings that survive
+
+{{< snippet repo="minus80" file="snail-assassin/src/config/settings.ts" lines="41-83" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Everything [lesson 10](../lessons/10-ship.qmd#remember-things) asked for, in one place:
+
+- **One key, namespaced**: `minus80.snail-assassin.settings`, so the studio's other games on the same site can't clash with it.
+- **One object, as JSON.** All settings are saved together, and loaded over the defaults (`{ ...current, ...saved }`), so a setting added in a later version gets its default value instead of `undefined`.
+- **Every access wrapped in `try`**, with a comment saying what happens if storage is blocked.
+- **Loaded once, then cached** in `current`, so the game doesn't read storage every frame.
+
+`markOnce` records that you've seen something (the tutorial, a science reveal) so it can be skipped next time: [exercise 7.4](../lessons/07-scenes.qmd#exercises)'s "tutorial finished", built.
+:::
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F6.1: Two fingers" .exercise #ex-f6.1}
+In `TouchControls.ts`, find the line that makes it possible to move and press an ability button at the same time. What's the equivalent in *Cold Chain*?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f6.1)
+:::
+
+::: {.callout-tip title="Exercise F6.2: Save Cold Chain's way, or theirs?" .exercise #ex-f6.2}
+*Cold Chain* saves one number under one key. If you added a mute setting, volume, and "tutorial seen" to *Cold Chain*, would you add three more keys, or switch to *Snail Assassin*'s one-object approach? Why?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f6.2)
+:::
+
+**Next:** [A grown-up project](07-grown-up.qmd)

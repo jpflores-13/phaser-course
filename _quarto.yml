@@ -71,6 +71,31 @@ website:
             href: lessons/09-feel.qmd
           - text: "10. Phones, saves and shipping"
             href: lessons/10-ship.qmd
+      - text: Practice
+        menu:
+          - text: "Remix"
+            href: practice/remix.qmd
+          - text: "Capstone"
+            href: practice/capstone.qmd
+      - text: Field guide
+        menu:
+          - text: "Reading Snail Assassin"
+            href: field-guide/index.qmd
+          - text: "---"
+          - text: "1. Reading TypeScript"
+            href: field-guide/01-typescript.qmd
+          - text: "2. The layout"
+            href: field-guide/02-layout.qmd
+          - text: "3. Scene flow"
+            href: field-guide/03-scene-flow.qmd
+          - text: "4. The hunt"
+            href: field-guide/04-hunt.qmd
+          - text: "5. Tuning and design docs"
+            href: field-guide/05-tuning-and-design.qmd
+          - text: "6. Phones and saves"
+            href: field-guide/06-phones-and-saves.qmd
+          - text: "7. A grown-up project"
+            href: field-guide/07-grown-up.qmd
       - text: Answers
         menu:
           - text: "0. What a game engine does"
@@ -95,6 +120,11 @@ website:
             href: answers/09-feel-answers.qmd
           - text: "10. Phones, saves and shipping"
             href: answers/10-ship-answers.qmd
+          - text: "---"
+          - text: "Remix"
+            href: answers/remix-answers.qmd
+          - text: "Field guide"
+            href: answers/field-guide-answers.qmd
       - text: About
         href: about.qmd
     right:
@@ -129,6 +159,10 @@ website:
             - lessons/08-mechanics.qmd
             - lessons/09-feel.qmd
             - lessons/10-ship.qmd
+        - section: "Practice"
+          contents:
+            - practice/remix.qmd
+            - practice/capstone.qmd
     - id: answers
       title: "Answer keys"
       style: docked
@@ -146,6 +180,20 @@ website:
             - answers/08-mechanics-answers.qmd
             - answers/09-feel-answers.qmd
             - answers/10-ship-answers.qmd
+            - answers/remix-answers.qmd
+            - answers/field-guide-answers.qmd
+    - id: field-guide
+      title: "Field guide"
+      style: docked
+      contents:
+        - field-guide/index.qmd
+        - field-guide/01-typescript.qmd
+        - field-guide/02-layout.qmd
+        - field-guide/03-scene-flow.qmd
+        - field-guide/04-hunt.qmd
+        - field-guide/05-tuning-and-design.qmd
+        - field-guide/06-phones-and-saves.qmd
+        - field-guide/07-grown-up.qmd
 
   page-footer:
     left: "Phaser Course, by JP Flores. Lessons [CC BY 4.0](/about.qmd#license), code [MIT](/about.qmd#license)."

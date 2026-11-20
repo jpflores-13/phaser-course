@@ -1,0 +1,197 @@
+---
+title: "Field guide answers"
+subtitle: "Reading Snail Assassin"
+---
+
+Back to the [field guide](../field-guide/index.qmd).
+
+## Exercise F1.1: Read it as JavaScript {#ex-f1.1}
+
+Drop the `private` and the `: void`, and that's it:
+
+```js
+pauseHunt() {
+  if (this.ended) return;
+  this.scene.launch('Pause', { characterId: this.character.id });
+  this.scene.pause();
+}
+```
+
+Most TypeScript in the game converts like this: delete the annotations and the modifiers, and the code underneath is the JavaScript you already know.
+
+## Exercise F1.2: What can it be? {#ex-f1.2}
+
+- **`Action`** is one of eight strings: `'up'`, `'down'`, `'left'`, `'right'`, `'primary'`, `'secondary'`, `'capture'`, `'pause'`.
+- **`volume`** is a `number` (0.7 by default).
+- **The lists** are `seenDiscovery` and `tutorialDone`, both `string[]`: arrays of character IDs.
+
+`keys` is a `KeyMap`, which is `Record<Action, string>`: an object with exactly one string for each of those eight actions. Forget one, and TypeScript says so.
+
+## Exercise F2.1: Where would it go? {#ex-f2.1}
+
+Characters are **data**, built from reusable ability kinds, so a new snail with an *existing* kind of ability is mostly one new file:
+
+- **`src/characters/`**: a new file like `catalyst.ts`, and one line in `index.ts` to add it to `CHARACTERS`.
+- **`src/audio/Sound.ts`**: an entry in `CHARACTER_PITCH`, the snail's voice.
+- **`src/content/`** and **`docs/SCIENCE.md`**: the player-facing science, and its evidence, before anyone sees it.
+- **`tests/`**: `characters.test.ts` checks every character's data.
+
+You don't touch `Boot`: it already draws a sprite for every entry in `CHARACTERS`.
+
+A *new kind* of ability is bigger: a new `kind` in `characters/types.ts` (today there are `cloud`, `engulf`, `strike`, `lock` and `reel`), the rules for it in `src/systems/`, and a case in `HuntScene.react()` for how it looks and sounds. The layout makes that boundary obvious: data changes are cheap, rule changes go through the systems.
+
+## Exercise F2.2: Phaser or not? {#ex-f2.2}
+
+In `src/systems/` the only match is a comment in `hunt.ts`, saying there's no Phaser in there. All nine files in `src/scenes/` import it.
+
+That's the layering from [the layout](../field-guide/02-layout.qmd#three-layers): systems are the rules, as plain TypeScript, so they can run in tests with no browser and no game. Scenes are the only place that draws, plays sound or reads devices.
+
+## Exercise F3.1: Follow the replay button {#ex-f3.1}
+
+In `ResultsScene.ts`:
+
+```ts
+const again = () => this.scene.start('Hunt', { characterId: c.id });
+```
+
+`start`, with data, as in [lesson 7](../lessons/07-scenes.qmd#passing-data-in). The hunt doesn't need resetting by hand because `HuntScene.create()` builds a brand new hunt every time it runs: `this.state = createHunt(...)`, plus resetting its own flags (`this.ended = false`, clearing the fish sprites). All the game's state lives in that one `state` object, so replacing it resets everything at once.
+
+## Exercise F3.2: Leaving the pause screen {#ex-f3.2}
+
+```ts
+const close = (next: () => void) => {
+  kb?.removeAllListeners();
+  this.scene.stop();
+  next();
+};
+kb?.on('keydown-ESC', () => close(() => this.scene.resume('Hunt')));
+```
+
+**Esc** stops the pause overlay, then resumes the hunt. Before either, `close` removes every keyboard listener the pause screen added, so a key pressed on the way out can't trigger a second action (restart, quit) by accident. Every option on the pause screen goes through the same `close`, so they all clean up the same way.
+
+## Exercise F4.1: The reef wraps {#ex-f4.1}
+
+`wrap()` in `src/systems/predator.ts`:
+
+```ts
+export function wrap(v: number, size: number): number {
+  return ((v % size) + size) % size;
+}
+```
+
+`%` alone gives negative numbers for negative positions (`-5 % 100` is `-5`), so it adds `size` and takes `%` again: `-5` becomes `95`. The hunt uses it for the snail, the octopus, the fish and the venom clouds.
+
+In *Cold Chain*, Arcade physics has it built in: turn off `setCollideWorldBounds` and call `this.physics.world.wrap(this.player, 16)` every frame in `update()`. The second argument is padding, so the sprite goes fully off one edge before appearing at the other.
+
+## Exercise F4.2: Clamp delta in Cold Chain {#ex-f4.2}
+
+At the top of `Play.update()`:
+
+```js
+update(time, rawDelta) {
+  const delta = Math.min(rawDelta, 100); // at most a tenth of a second
+  // ...the rest unchanged, using delta
+}
+```
+
+That protects everything *Cold Chain* times by hand: the clock and the thaw meter. Without it, coming back to a background tab could thaw a sample in one frame.
+
+It doesn't change the researcher or the carts. Their bodies are moved by Phaser's physics world, which runs its own steps, outside your `update()`. That's one of the things you hand over when you use Arcade physics, and one of the things *Snail Assassin* controls by not using it.
+
+## Exercise F4.3: Tune the octopus {#ex-f4.3}
+
+`predator.stillVisibility`, 0.08 by default: how visible a motionless snail is, compared with a moving one. Doubling it to 0.16 makes waiting noticeably riskier; at 1, holding still stops working at all (exercise F7.1).
+
+`sightRadius` also works, but it makes the octopus better at spotting *moving* snails too, which changes the game far more.
+
+## Exercise F5.1: From words to numbers {#ex-f5.1}
+
+In `tuning.ts`, `hunt.objectiveCaptures: 3` and `hunt.timeLimitSeconds: 180`. Both are checked in `src/systems/hunt.ts`:
+
+```ts
+if (state.captured >= TUNING.hunt.objectiveCaptures) {
+  // won
+} else if (!state.options.relaxed && state.time >= TUNING.hunt.timeLimitSeconds) {
+  // out of time
+}
+```
+
+Note the `relaxed` check: in relaxed mode (an accessibility option) there's no time limit. The design document's "3 fish in 3:00", the tuning file's two numbers, and the accessibility document's "no hunt timer" all meet in those three lines.
+
+## Exercise F5.2: Label your own {#ex-f5.2}
+
+There's no single answer. Using the chromatin example from [exercise 8.5](08-mechanics-answers.qmd#ex-8.5):
+
+| Claim in the game | Label | Source |
+|---|---|---|
+| Cohesin extrudes DNA loops | Verified | a cited paper on loop extrusion |
+| Loops stop at CTCF sites facing each other | Verified | a cited paper on CTCF orientation |
+| Extrusion is a single ring sliding one way | Abstraction | (the game simplifies a two-sided process) |
+| Speed and timing | Abstraction | chosen for play |
+
+If you can't find a source for a claim you thought was solid, that's the most useful thing this exercise can tell you.
+
+## Exercise F6.1: Two fingers {#ex-f6.1}
+
+In the `TouchControls` constructor:
+
+```ts
+scene.input.addPointer(2); // move and press a button at the same time
+```
+
+Phaser tracks one touch pointer by default. `addPointer(2)` adds two more, so a thumb on the joystick and another on a button both count. *Cold Chain* asks for the same thing in its game config: `input: { activePointers: 2 }`.
+
+## Exercise F6.2: Save Cold Chain's way, or theirs? {#ex-f6.2}
+
+Switch to one object. With several settings:
+
+- Separate keys mean several reads and writes, each needing its own `try`, and each its own string-to-value conversion (exercise [10.2](10-ship-answers.qmd#ex-10.2)).
+- One object, saved as JSON, keeps types: numbers stay numbers and lists stay lists.
+- Loading saved values *over* defaults (`{ ...defaults(), ...saved }`) means a setting you add next month gets its default for players who saved before it existed.
+
+The best time could stay where it is, or move into the same object. Keep the key namespaced either way: `cold-chain:settings`.
+
+## Exercise F7.1: A test that can't fail {#ex-f7.1}
+
+**All the tests still pass**, even though holding still no longer hides you.
+
+Here's what the octopus actually does in that test with `stillVisibility: 1`, a second at a time:
+
+```
+0 s   patrol   awareness 0.01
+1 s   chase    awareness 0.76
+2 s   retreat  awareness 1.00   ← it grabbed the snail
+3 s   retreat
+4 s   retreat
+end   retreat
+```
+
+It spots the still snail, chases it, grabs it, and retreats. The test only checks the mode **at the end**:
+
+```ts
+expect(o.mode).not.toBe('chase');
+```
+
+and `'retreat'` isn't `'chase'`, so it passes. The test was written to check "the octopus ignores a still snail", but it actually checks "the octopus isn't chasing after five seconds", and those come apart as soon as the octopus can grab.
+
+A stronger version checks every step:
+
+```ts
+let everChased = false;
+for (let i = 0; i < 300; i++) {
+  stepPredator(o, snail, 0, arena, createRng(2), DT);
+  if (o.mode !== 'patrol') everChased = true;
+}
+expect(everChased).toBe(false);
+```
+
+This is the most important lesson about tests: a passing test tells you the thing it checks is true. Make sure that's the thing you meant. One way to check is exactly what this exercise did: break the game on purpose, and see whether a test notices.
+
+## Exercise F7.2: Accessibility for Cold Chain {#ex-f7.2}
+
+Any two, well argued. Two strong choices:
+
+- **A relaxed mode.** Timing pressure is the whole difficulty of *Cold Chain*, so it's the first barrier for many players. A "relaxed" setting that halves `thaw.perSecond` and sets `carts.extraPerDelivery` to 0 is a few lines, because the numbers already live in `tuning.js` ([lesson 8](../lessons/08-mechanics.qmd#tuning-as-data)). Save the choice with the rest of the settings (exercise F6.2).
+- **Reduced effects.** The switches in `tuning.feel` already exist ([lesson 9](../lessons/09-feel.qmd)). Turn shake and hit-stop off when `window.matchMedia('(prefers-reduced-motion: reduce)').matches`, as *Snail Assassin* does, and offer a setting to change it.
+
+Also good: remappable keys (*Cold Chain* already accepts arrows and WASD, but not, say, a one-handed layout), and a text label for the thaw warning: right now it's a beep and a colour change, which misses players who can't hear it or can't tell the colours apart.

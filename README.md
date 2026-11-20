@@ -14,7 +14,7 @@ Start at the [setup page](https://jpflores-13.github.io/phaser-course/setup.html
 In short:
 
 ```bash
-git clone https://github.com/jpflores-13/phaser-course.git
+git clone --recurse-submodules https://github.com/jpflores-13/phaser-course.git
 cd phaser-course
 cp -r starter my-cold-chain
 cd my-cold-chain
@@ -55,6 +55,24 @@ slides. Each `##` heading is a slide. Longer explanations sit inside
 
 `_extensions/snippet/` pulls code straight out of the game files, so the code
 on a page is code that runs. A missing file or method shows a warning box.
+With `repo="minus80"` it reads from the pinned studio games instead, and links
+to the pinned commit on GitHub. To move the field guide to a newer version of
+the studio games, update the submodule and re-check the guide's line ranges:
+
+```bash
+git -C field-guide/minus80 pull origin main
+quarto render field-guide/
+```
+
+### Live tuning
+
+```markdown
+{{< game stopping-points/stopE id="tuning-game" >}}
+{{< tuning target="tuning-game" sliders="thaw.perSecond:1:25:1" switches="feel.shake" >}}
+```
+
+`_extensions/tuning/` draws sliders and switches that send changes to a running
+game through `window.postMessage`. The game listens in `src/tuning-bridge.js`.
 
 ### Playable games
 
@@ -72,6 +90,8 @@ on a page is code that runs. A missing file or method shows a warning box.
 | `starter/` | An empty game. Learners copy it to `my-cold-chain/` |
 | `stopping-points/stopA` … `stopE` | *Cold Chain* at the end of each block. `stopE` is the finished game |
 | `solutions/NN/ex-N.M/` | A runnable answer to a "Build it" exercise |
+| `remix/NN-name/` | Six small broken games for practice; answers in `solutions/remix/` |
+| `field-guide/minus80/` | The Minus 80 Studios games, pinned as a git submodule for the field guide |
 
 Every game folder is a complete Vite project with its own `package.json`, so
 learners can copy any of them and run `npm install && npm run dev`.

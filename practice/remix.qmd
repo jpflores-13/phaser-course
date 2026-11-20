@@ -1,0 +1,63 @@
+---
+title: "Remix"
+subtitle: "Six tiny games, each broken or missing something. Fix them."
+---
+
+Some people learn best by writing code from scratch. Others learn best by changing code that already works. These are for the second group, and for anyone who wants more practice after a lesson.
+
+Each game is one file, `src/main.js`, under 120 lines, with a comment at the top saying what's wrong. Play it here first, then open the file:
+
+```bash
+cp -r remix/01-pong my-pong
+cd my-pong && npm install && npm run dev
+```
+
+They're roughly in course order. Each says which lessons it needs.
+
+## 1. Pong, but one paddle is broken
+
+*Lessons 2–4.* Your paddle works. The computer's never moves. Make it follow the ball, but not so well that you can never score.
+
+{{< game remix/01-pong caption="W and S, or the arrow keys." >}}
+
+[Answer](../answers/remix-answers.qmd#remix-1){.answer-link}
+
+## 2. Breakout without bricks
+
+*Lesson 4.* The paddle and ball work. There's nothing to break. Add rows of bricks that the ball bounces off and destroys, and a message when they're all gone.
+
+{{< game remix/02-breakout caption="Mouse or arrow keys. Click to launch." >}}
+
+[Answer](../answers/remix-answers.qmd#remix-2){.answer-link}
+
+## 3. A lab with no camera
+
+*Lesson 6.* *Cold Chain*'s second floor, bigger than the screen, and a camera that never moves. Walk out of view and you're lost. Make the camera follow you, never show past the edge of the map, and keep the message in the corner.
+
+{{< game remix/03-dungeon caption="Arrow keys. Find the −80." >}}
+
+[Answer](../answers/remix-answers.qmd#remix-3){.answer-link}
+
+## 4. A clicker with no save
+
+*Lessons 9–10.* Click the freezer, buy robots that store samples for you. Reload the page, and it's all gone. Make it remember, and save on its own every few seconds.
+
+{{< game remix/04-clicker caption="Click the freezer." >}}
+
+[Answer](../answers/remix-answers.qmd#remix-4){.answer-link}
+
+## 5. A game with no reason to take risks
+
+*Lesson 8.* Cross the lab, dodge three carts, beat your time. There's only ever one plan. Add a risk and reward choice: something worth a detour, that costs something to get. Good players should take it sometimes, not always.
+
+{{< game remix/05-no-risk caption="Arrow keys. R to restart." >}}
+
+[Answer](../answers/remix-answers.qmd#remix-5){.answer-link}
+
+## 6. A flat, joyless shooter
+
+*Lesson 9.* Shoot the contaminated plates before they reach the bottom. It all works, and nothing feels like anything. Add feedback until it's fun, without changing the rules.
+
+{{< game remix/06-shooter caption="Left and right to move, space to fire." >}}
+
+[Answer](../answers/remix-answers.qmd#remix-6){.answer-link}

@@ -6,9 +6,12 @@ code on the page is always code that runs.
   {{< snippet file="stopping-points/stopE/src/scenes/Play.js" method="create" >}}
   {{< snippet file="stopping-points/stopA/src/main.js" >}}
   {{< snippet file="stopping-points/stopB/src/scenes/Play.js" lines="40-60" >}}
+  {{< snippet repo="minus80" file="snail-assassin/src/systems/predator.ts" method="stepPredator" >}}
 
 Arguments
-  file      path from the repository root
+  repo      "minus80" for the Minus 80 Studios games pinned at field-guide/minus80
+            (a git submodule); leave out for this course's own files
+  file      path from the repository root (or from the studio repo's root)
   method    a method or function name: from `name(` to its closing brace,
             plus the comment lines directly above it
   class     a class name, the whole class
@@ -22,6 +25,26 @@ instead of stopping the render.
 ]]
 
 local COURSE_REPO = "https://github.com/jpflores-13/phaser-course/blob/main/"
+
+-- Other repositories pinned as git submodules. Links point at the pinned commit,
+-- so the code on the page and the code behind the link always match.
+local REPOS = {
+  minus80 = { dir = "field-guide/minus80", github = "https://github.com/jpflores-13/Minus80Studios", name = "Minus80Studios" },
+}
+
+local sha_cache = {}
+local function pinned_sha(dir)
+  if sha_cache[dir] ~= nil then return sha_cache[dir] end
+  local sha = false
+  local p = io.popen('git -C "' .. dir .. '" rev-parse HEAD 2>/dev/null')
+  if p then
+    local out = p:read("*l")
+    p:close()
+    if out and out:match("^%x+$") and #out == 40 then sha = out end
+  end
+  sha_cache[dir] = sha
+  return sha
+end
 
 local function with_filename(code, filename)
   if not filename or not quarto.doc.is_format("html") then return code end
@@ -103,12 +126,29 @@ local function find_block(lines, name, kind, with_comments)
       "^%s*function%s+" .. esc .. "%s*%(",              -- function name(
       "^%s*export%s+const%s+" .. esc .. "%s*=",         -- export const name =
       "^%s*const%s+" .. esc .. "%s*=",                  -- const name =
+      "^%s*export%s+interface%s+" .. esc .. "[%s{<]",   -- TypeScript: export interface Name {
+      "^%s*interface%s+" .. esc .. "[%s{<]",
+      "^%s*export%s+type%s+" .. esc .. "[%s=<]",        -- TypeScript: export type Name =
+      "^%s*type%s+" .. esc .. "[%s=<]",
     }
   end
+  -- TypeScript methods often start with modifiers: `private override update(`
+  local function strip_modifiers(line)
+    local prev
+    repeat
+      prev = line
+      for _, word in ipairs({ "public", "private", "protected", "static", "override", "readonly", "abstract" }) do
+        line = line:gsub("^(%s*)" .. word .. "%s+", "%1")
+      end
+    until line == prev
+    return line
+  end
+
   local start
   for i, line in ipairs(lines) do
+    local bare = strip_modifiers(line)
     for _, pat in ipairs(patterns) do
-      if line:match(pat) then start = i; break end
+      if bare:match(pat) then start = i; break end
     end
     if start then break end
   end
@@ -121,7 +161,10 @@ local function find_block(lines, name, kind, with_comments)
   else
     for j = start + 1, #lines do
       local line = lines[j]
-      if not is_blank(line) and indent_of(line) == base and line:match("^%s*[}%])]") then
+      -- a closing line starts with } or ], or is a lone ) as in `);`.
+      -- Not `): Type {`, which is the end of a multi-line signature.
+      local closes = line:match("^%s*[}%]]") or line:match("^%s*%)[;,]?%s*$")
+      if not is_blank(line) and indent_of(line) == base and closes then
         stop = j
         break
       end
@@ -176,9 +219,16 @@ local function snippet(args, kwargs, meta)
   if not file then
     return warn_block("snippet needs file=")
   end
-  local lines = read_lines(project_dir() .. "/" .. file)
+  local repo_key = str(kwargs["repo"])
+  local repo = repo_key and REPOS[repo_key]
+  if repo_key and not repo then
+    return warn_block("unknown repo '" .. repo_key .. "' (use minus80, or leave it out)")
+  end
+  local base = project_dir() .. (repo and ("/" .. repo.dir) or "")
+  local lines = read_lines(base .. "/" .. file)
   if not lines then
-    return warn_block(file .. " does not exist (yet)")
+    local hint = repo and " (run `git submodule update --init`)" or ""
+    return warn_block((repo and (repo.dir .. "/") or "") .. file .. " does not exist" .. hint)
   end
 
   local first, last
@@ -210,12 +260,22 @@ local function snippet(args, kwargs, meta)
   if not quarto.doc.is_format("html") then
     return code
   end
-  local url = COURSE_REPO .. file .. "#L" .. first .. "-L" .. last
+  local url, where, link_text
+  if repo then
+    local sha = pinned_sha(base) or "main"
+    url = repo.github .. "/blob/" .. sha .. "/" .. file .. "#L" .. first .. "-L" .. last
+    where = repo.name .. ", lines " .. first .. "-" .. last
+    link_text = "view on GitHub"
+  else
+    url = COURSE_REPO .. file .. "#L" .. first .. "-L" .. last
+    where = "lines " .. first .. "-" .. last
+    link_text = "view in the course repository"
+  end
   local source = pandoc.Div(
     { pandoc.Plain({
-        pandoc.Span({ pandoc.Str("lines " .. first .. "-" .. last) }, pandoc.Attr("", { "snippet-where" })),
+        pandoc.Span({ pandoc.Str(where) }, pandoc.Attr("", { "snippet-where" })),
         pandoc.Space(),
-        pandoc.Link({ pandoc.Str("view in the course repository") }, url, "", pandoc.Attr("", { "snippet-link" })),
+        pandoc.Link({ pandoc.Str(link_text) }, url, "", pandoc.Attr("", { "snippet-link" })),
       }) },
     pandoc.Attr("", { "snippet-source" }))
   return pandoc.Div({ code, source }, pandoc.Attr("", { "snippet" }))

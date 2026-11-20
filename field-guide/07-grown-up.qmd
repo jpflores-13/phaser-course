@@ -1,0 +1,98 @@
+---
+title: "A grown-up project"
+subtitle: "Tests, linting, docs, and what to copy into your own game."
+---
+
+Most of what makes *Snail Assassin* different from *Cold Chain* isn't in the game at all. It's in the files around it, which let several people change a game for months without breaking it.
+
+## One command for everything
+
+```json
+"scripts": {
+  "dev": "vite",
+  "build": "npm run typecheck && vite build",
+  "typecheck": "tsc --noEmit",
+  "test": "vitest run",
+  "lint": "eslint .",
+  "format": "prettier --write .",
+  "format:check": "prettier --check .",
+  "check": "npm run typecheck && npm run lint && npm run format:check && npm run test"
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+- **`typecheck`**: TypeScript checks every file for type errors ([Reading TypeScript](01-typescript.qmd)). The build refuses to run if it fails.
+- **`lint`**: ESLint looks for likely bugs: unused variables, suspicious comparisons.
+- **`format`**: Prettier lays out every file the same way, so nobody argues about spaces and diffs only show real changes. It's also why the snippet tool in this course can find where a function ends.
+- **`test`**: Vitest runs the unit tests.
+- **`check`**: all of the above. Run it before every commit.
+:::
+
+## Tests that read like the design
+
+{{< snippet repo="minus80" file="snail-assassin/tests/predator.test.ts" lines="11-26" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The test names are the design document: *barely notices a snail that holds still*, *chases a snail that moves nearby*. Each one builds an octopus, steps it for a few seconds of game time (300 frames at 1/60 s), and checks what it's doing.
+
+This is only possible because the systems don't use Phaser ([the hunt](04-hunt.qmd#rules-as-data-and-a-function)). It's also what makes tuning safer: change a number, run `npm test`, and a failing test tells you which part of the design you just broke.
+
+But a test only checks what it checks. Exercise F7.1 finds a case where the game's central idea breaks and every test still passes.
+
+*Cold Chain* has no tests, and with its rules mixed into `Play.js`, adding them would be hard. That's the trade.
+:::
+
+## Fixed versions, fixed ports
+
+{{< snippet repo="minus80" file="snail-assassin/vite.config.ts" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Familiar from [lesson 10](../lessons/10-ship.qmd#relative-paths): `base: './'` (the comment lists itch.io, GitHub Pages and "a USB stick in an arcade cabinet"), and the chunk size warning silenced with a comment saying why. New: each studio game gets its own port, so several can run at once. `.node-version` pins Node to 26, and `package.json` pins every dependency to an exact version.
+:::
+
+## The docs folder
+
+| File | What it's for |
+|---|---|
+| `GAME_DESIGN.md` | what the game is, and what's still a proposal |
+| `SCIENCE.md` | what's verified, hypothesised, or invented, with sources |
+| `ACCESSIBILITY.md` | every accessibility option, and its known limits |
+| `PLAYTESTING.md` | how to run a session, the debrief questions, and a log |
+| `ART_DIRECTION.md` | the look, the palette, the rules for new art |
+| `ASSET_CREDITS.md` | where every asset came from, and its license |
+| `ROADMAP.md` | what's next |
+| `CHANGELOG.md` | what changed, version by version |
+
+::: {.content-hidden when-format="revealjs"}
+`ACCESSIBILITY.md` deserves a look even if you read nothing else. It's a table of needs (time pressure, low vision, one hand, colour blindness, motion sensitivity, hearing) and what the game does for each: a relaxed mode with no timer, large text, auto-aim, remappable keys, reduced effects that follow the device's reduce-motion setting. Then a "known limits" section that says plainly what it can't do yet.
+
+`PLAYTESTING.md` is short and practical: give testers no instructions, watch silently, note where they hesitate, misunderstand or smile, then ask a few questions. It's the best tool for finding the kind of design bug in [exercise 8.3](../lessons/08-mechanics.qmd#exercises).
+:::
+
+## What to copy into your capstone
+
+Not all of it. A short game for your lab doesn't need nine scenes or remappable keys. In rough order of value:
+
+1. **A tuning file**, from day one. You'll be glad within the hour.
+2. **A `SCIENCE.md`** with the three labels. Write it before the game, not after.
+3. **`base: './'`** and a deploy workflow, so sharing is one push.
+4. **A playtesting habit**: three people, no instructions, watch silently.
+5. **Prettier**, set to run on save in your editor. Free and invisible.
+6. **The rules in plain functions**, once the game is big enough to have rules worth testing.
+7. **TypeScript**, when the game has grown past what you can hold in your head.
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F7.1: A test that can't fail" .exercise #ex-f7.1}
+On a copy of `snail-assassin/` (so you don't change the pinned one), run `npm install` and `npm test`. Then set `stillVisibility` in `tuning.ts` to `1`, so a still snail is as easy to see as a moving one, and run the tests again.
+
+Holding still no longer hides you. Do any tests fail? Read *barely notices a snail that holds still* carefully and explain the result. How would you change the test?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f7.1)
+:::
+
+::: {.callout-tip title="Exercise F7.2: Accessibility for Cold Chain" .exercise #ex-f7.2}
+Read `docs/ACCESSIBILITY.md`. Pick the two options that would help *Cold Chain*'s players most, and say how you'd build each one using what you've learned in the course.
+
+[Answer](../answers/field-guide-answers.qmd#ex-f7.2)
+:::

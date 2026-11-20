@@ -39,9 +39,11 @@ Use your package manager, or the official binaries from [nodejs.org](https://nod
 ## 3. Get the course files
 
 ```bash
-git clone https://github.com/jpflores-13/phaser-course.git
+git clone --recurse-submodules https://github.com/jpflores-13/phaser-course.git
 cd phaser-course
 ```
+
+`--recurse-submodules` also fetches the Minus 80 Studios games that the field guide reads (under 1 MB). If you already cloned without it, run `git submodule update --init`.
 
 ## 4. Make your copy of the game and run it
 

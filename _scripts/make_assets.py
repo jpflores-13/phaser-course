@@ -6,7 +6,7 @@ third-party asset licenses to track. Run it from the repo root:
     python3 _scripts/make_assets.py
 
 It writes to assets/ and then copies assets/ into public/assets/ of every game
-folder (starter/, stopping-points/*, solutions/**, remix/*).
+folder (starter/, stopping-points/*, solutions/**, remix/**).
 """
 
 from __future__ import annotations
@@ -621,7 +621,14 @@ def main() -> None:
         write_wav(OUT / f"audio/{name}.wav", samples)
 
     # copy into every game folder
-    targets = [p.parent for p in ROOT.glob("**/package.json") if "node_modules" not in p.parts and p.parent != ROOT]
+    # only the course's own games; never the studio games pinned under field-guide/
+    groups = ("starter", "stopping-points", "solutions", "remix")
+    targets = [
+        p.parent
+        for g in groups
+        for p in (ROOT / g).glob("**/package.json")
+        if "node_modules" not in p.parts
+    ]
     for game in targets:
         dest = game / "public" / "assets"
         if dest.exists():

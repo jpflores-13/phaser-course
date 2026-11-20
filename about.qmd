@@ -28,6 +28,7 @@ title: "About"
 | Lessons, slides, figures and text | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) (`LICENSE`) |
 | Code: *Cold Chain*, stopping points, solutions, scripts, site extensions | [MIT](https://opensource.org/license/mit) (`LICENSE-code`) |
 | Sprites, tiles, maps and sounds in `assets/` | [CC0](https://creativecommons.org/publicdomain/zero/1.0/): use them for anything |
+| *Snail Assassin* and the other Minus 80 Studios games in `field-guide/minus80/` | the studio's own license: quoted in the field guide for teaching, not covered by the licenses above |
 
 ## How to cite {#how-to-cite}
 

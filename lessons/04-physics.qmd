@@ -69,7 +69,7 @@ this.player.setVelocity(dx * 200, dy * 200);   // no delta needed
 ```
 
 ::: {.content-hidden when-format="revealjs"}
-If you set `x` directly on an object with a body, the body and the picture fall out of step, and collisions misbehave. To teleport a body, use `body.reset(x, y)`, which moves it and zeroes its velocity.
+You *can* still set `x` on an object with a body: the body copies its game object's position at the start of every physics step. But physics never sees that as movement. There's no velocity, so a big jump can skip straight through a wall, and anything it bumps into gets no push. Move bodies with velocity. To teleport one on purpose, use `body.reset(x, y)`, which moves it and zeroes its velocity.
 :::
 
 ## Acceleration and drag

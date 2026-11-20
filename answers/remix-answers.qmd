@@ -1,0 +1,92 @@
+---
+title: "Remix answers"
+subtitle: "One way to fix each game. Yours may be different, and better."
+---
+
+Back to [Remix](../practice/remix.qmd). Every solution is in `solutions/remix/`, with each change marked `// new`.
+
+## 1. Pong {#remix-1}
+
+```js
+const CPU_SPEED = 230;
+const gap = this.ball.y - this.cpu.y;
+this.cpu.body.setVelocityY(Phaser.Math.Clamp(gap * 5, -CPU_SPEED, CPU_SPEED)); // <1>
+```
+1. Move toward the ball, faster the further away it is (`gap * 5`), but never faster than `CPU_SPEED`.
+
+The obvious fix, `this.cpu.y = this.ball.y`, makes an unbeatable paddle, and moves a physics body by hand ([lesson 4](../lessons/04-physics.qmd#velocity-not-position)). A speed limit is what makes the computer lose: a steep, fast ball gets past it. `CPU_SPEED` is now the game's difficulty setting.
+
+{{< game solutions/remix/01-pong caption="The computer plays back, and can be beaten." >}}
+
+## 2. Breakout {#remix-2}
+
+{{< snippet file="solutions/remix/02-breakout/src/main.js" lines="30-39" >}}
+
+{{< snippet file="solutions/remix/02-breakout/src/main.js" method="hitBrick" >}}
+
+A **static** group, because bricks never move. A `collider`, not an `overlap`, so the ball bounces before the brick disappears ([exercise 4.2](04-physics-answers.qmd#ex-4.2)). `countActive()` counts what's left.
+
+{{< game solutions/remix/02-breakout caption="Five rows to clear." >}}
+
+## 3. A lab with no camera {#remix-3}
+
+{{< snippet file="solutions/remix/03-dungeon/src/main.js" lines="39-47" >}}
+
+Three things from [lesson 6](../lessons/06-worlds.qmd#a-camera-that-follows): `setBounds` so the view stops at the map's edge, `startFollow` with a little lerp, and `setScrollFactor(0)` on the message so it stays on screen. Without the last one, the message is left behind at the start of the map as soon as the camera moves.
+
+{{< game solutions/remix/03-dungeon caption="Now you can find the freezer." >}}
+
+## 4. A clicker with no save {#remix-4}
+
+{{< snippet file="solutions/remix/04-clicker/src/main.js" lines="6-24" >}}
+
+Then load in `create()`, and save on a timer and when the page is hidden:
+
+```js
+({ samples: this.samples, robots: this.robots } = load());
+
+const saveNow = () => save({ samples: this.samples, robots: this.robots });
+this.time.addEvent({ delay: 5000, loop: true, callback: saveNow }); // <1>
+this.game.events.on('hidden', saveNow); // <2>
+window.addEventListener('pagehide', saveNow); // <3>
+```
+1. Every 5 seconds. Not every frame: saving is slow compared with a frame, and there's no need.
+2. Phaser's `hidden` event fires when the player switches tab or app, which on a phone may be the last chance you get.
+3. `pagehide` fires when the page is closed or reloaded.
+
+`Number(...) || 0` turns anything odd in storage (missing, corrupt, from an older version) into 0 instead of `NaN` ([exercise 10.2](10-ship-answers.qmd#ex-10.2)).
+
+{{< game solutions/remix/04-clicker caption="Click, wait five seconds, reload this page." >}}
+
+## 5. A reason to take risks {#remix-5}
+
+One way: dry ice that takes 2 seconds off your time, placed at the far ends of the cart lanes, and a 1-second cost for each hit.
+
+{{< snippet file="solutions/remix/05-no-risk/src/main.js" method="grabIce" >}}
+
+Why it works as a choice ([lesson 8](../lessons/08-mechanics.qmd#risk-and-reward)):
+
+- **It's off the straight line.** Each one costs a detour, about a second of walking.
+- **It's in a cart's lane.** Whether it's worth it depends on where that cart is right now, so the answer changes every run.
+- **Getting hit costs time too.** Without `HIT_COST`, there's no downside to barging in, and grabbing every ice becomes the only sensible plan.
+
+Other good answers: a shortcut through a spill (faster, but slippery), or a second exit that's closer but behind all three carts. A bad answer: a bonus on the straight path, which is just a slower clock ([exercise 8.3](08-mechanics-answers.qmd#ex-8.3)).
+
+{{< game solutions/remix/05-no-risk caption="Is that dry ice worth it right now?" >}}
+
+## 6. A shooter with feedback {#remix-6}
+
+{{< snippet file="solutions/remix/06-shooter/src/main.js" method="hit" >}}
+
+Every action now gets an answer ([lesson 9](../lessons/09-feel.qmd)):
+
+| Action | Feedback |
+|---|---|
+| A plate appears | it pops in (`Back.Out`) instead of appearing |
+| Fire | a click with a slightly random pitch, and the ship kicks back |
+| Hit | the plate flashes white, bursts into particles, a thud, a tiny shake, the score pops |
+| Miss | a red flash and a sad sound |
+
+Two details are worth stealing. `plate.body.enable = false` stops the plate in place for the 40 ms it's white, so a second shot can't hit it. And the random pitch on the shot sound stops rapid fire from sounding like a machine.
+
+{{< game solutions/remix/06-shooter caption="Same rules. Hold space." >}}

@@ -1,0 +1,84 @@
+---
+title: "Tuning and design docs"
+subtitle: "How design decisions become numbers, and how the science stays honest."
+---
+
+[Lesson 8](../lessons/08-mechanics.qmd) put every balance number in `tuning.js`. *Snail Assassin* does the same, at a larger scale, and adds two documents that sit beside the numbers: one for the design, one for the science.
+
+## The tuning file
+
+{{< snippet repo="minus80" file="snail-assassin/src/config/tuning.ts" lines="1-13" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The first comment does a lot of work: these numbers were **chosen for feel, not measured from biology**. Anyone reading the file knows not to cite `fleeSpeedMultiplier: 2.2` as a fact about fish.
+
+The file is about a hundred lines, grouped by system (`hunt`, `snail`, `fish`, `metabolic`, `neural`, `escape`, `predator`...), with a comment on every number whose meaning isn't obvious. Some comments are whole equations: the metabolic section describes how blood sugar falls and recovers in one line of maths. When a number lives next to the formula it feeds, it can be tuned without reading the code.
+:::
+
+## The predator, as numbers
+
+{{< snippet repo="minus80" file="snail-assassin/src/config/tuning.ts" lines="70-87" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Read it as a design: the octopus patrols slowly (35) but chases faster (62) than any snail can move (45–50). It can see 200 pixels. A motionless snail is 8% as visible as a moving one. A grab stuns you for 2.5 seconds and costs 25 venom. Each number is one sentence of the design document, made exact.
+:::
+
+## The design document
+
+`docs/GAME_DESIGN.md` describes the game in words: the pitch, the target experience ("tense, quiet, deliberate. The fun comes from waiting and timing, not speed"), the core loop, the controls, and a table of each snail's abilities.
+
+::: {.content-hidden when-format="revealjs"}
+It's a **living** document, and it says so at the top: anything not yet agreed is marked **(proposal)**. The core loop, the structure of the full game and the list of mechanics to explore are all proposals. That honesty about what's decided and what isn't is the most copyable thing in it.
+
+The **target experience** section is the test every number is held to. If a tuning change makes the hunt faster and more frantic, it's wrong, however fun it is, because the document says the fun comes from waiting.
+:::
+
+## The science document
+
+`docs/SCIENCE.md` opens with an **integrity rule**: player-facing science text may only use statements marked *Verified*, and only after review by a cone-snail researcher.
+
+Every statement in it carries a label:
+
+| Label | Meaning |
+|---|---|
+| **Verified** | stated in a cited paper's abstract |
+| **Hypothesis** | proposed by the paper's authors, not established |
+| **Abstraction** | the game's own invention |
+
+::: {.content-hidden when-format="revealjs"}
+Each ability gets a row: what inspired it, its status, the sources, and the **intentional simplifications**. The whole gameplay model (blood sugar, awareness, escape) is labelled *Abstraction*, with its equations written out, and a note that it "echoes" a relationship in the literature rather than modelling it.
+
+This is [lesson 8's "simplifying the science"](../lessons/08-mechanics.qmd#simplifying-the-science) done properly. For a game based on your own research, this file is worth more than any code: it's what lets you show the game to the people whose work it's based on.
+:::
+
+## The balancing panel
+
+In development, the backtick key opens a panel that changes tuning values while the game runs. It's loaded like this, at the end of `HuntScene.create()`:
+
+```ts
+if (import.meta.env.DEV) {
+  void import('../debug/DebugPanel').then(({ DebugPanel }) =>
+    DebugPanel.attach(this, () => this.state),
+  );
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+`import()` with brackets loads a module only when this line runs, and only in development. Vite leaves the whole panel out of the built game. It's the same idea as the sliders in [lesson 8](../lessons/08-mechanics.qmd#tune-it-live), built into the game instead of the page around it.
+:::
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F5.1: From words to numbers" .exercise #ex-f5.1}
+The design document says the hunt is "capture 3 fish in 3:00". Find both numbers in `tuning.ts`. Then find where the game checks them (hint: search `src/systems/hunt.ts` for `objectiveCaptures`).
+
+[Answer](../answers/field-guide-answers.qmd#ex-f5.1)
+:::
+
+::: {.callout-tip title="Exercise F5.2: Label your own" .exercise #ex-f5.2}
+Take your index card from [exercise 8.5](../lessons/08-mechanics.qmd#exercises). For each science claim your game makes, label it *Verified*, *Hypothesis* or *Abstraction*, with a source for the first two.
+
+[Answer](../answers/field-guide-answers.qmd#ex-f5.2)
+:::
+
+**Next:** [Phones and saves](06-phones-and-saves.qmd)

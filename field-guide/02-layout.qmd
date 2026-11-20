@@ -1,0 +1,83 @@
+---
+title: "The layout"
+subtitle: "What's in each folder of a real game, and why it's split that way."
+---
+
+Open `field-guide/minus80/snail-assassin/` in your editor. At the top level:
+
+```
+snail-assassin/
+├── index.html         the page (with a rotate hint and a screen-reader region)
+├── package.json       scripts: dev, build, test, lint, format, check
+├── vite.config.ts     a fixed port per game, relative paths, test settings
+├── tsconfig.json      TypeScript settings
+├── eslint.config.js   lint rules
+├── .node-version      26
+├── CHANGELOG.md       what changed in each version
+├── docs/              design, science, accessibility, playtesting, art, roadmap
+├── public/            files served as-is (icon, web app manifest)
+├── src/               the game
+└── tests/             unit tests
+```
+
+Compare *Cold Chain*'s folder: `index.html`, `package.json`, `vite.config.js`, `public/`, `src/`. Everything else here is there because more than one person works on the game, over months, and it has to keep working.
+
+## Inside `src/`
+
+```
+src/
+├── main.ts          builds the game from the list of scenes
+├── config/          gameConfig.ts (size, palette), tuning.ts (gameplay numbers), settings.ts (saved options)
+├── scenes/          nine scenes: Boot, Splash, Title, Settings, Select, Hunt, Pause, Results, Discovery
+├── systems/         the rules: hunt, fish, predator, venom, movement... pure TypeScript, no Phaser
+├── characters/      the three playable snails, as data
+├── entities/        Reef: the drawn background
+├── input/           keyboard and touch → the same "input" object
+├── ui/              buttons, the HUD, text styles, screen-reader announcements
+├── audio/           a sound engine that synthesises every effect
+├── content/         the player-facing science text
+├── debug/           a balancing panel, only in development
+└── utils/           small helpers: vector maths, random numbers
+```
+
+## Three layers
+
+The folders fall into three layers, and the arrows only point one way:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+  I["input/<br/>keys, touch"] --> S["scenes/<br/>Phaser: draw, play sounds, switch screens"]
+  S --> R["systems/<br/>the rules, as plain data and functions"]
+  C["config/, characters/<br/>numbers and data"] --> R
+```
+
+- **Systems** decide *what happens*: where the fish swim, when the octopus notices you, how much venom is left. They know nothing about Phaser, screens or keyboards.
+- **Scenes** decide *how it looks and sounds*: they ask the systems what happened and draw it.
+- **Input** turns devices into one plain object (`HuntInput`), so the rules never care whether you used a key or a finger.
+
+*Cold Chain* has the same three ideas, mixed together in `Play.js`: the thaw rules sit right next to the camera shake. At 300 lines that's fine. At 4,500 it isn't, and [the hunt](04-hunt.qmd) shows what the separation buys.
+
+## The entry point
+
+{{< snippet repo="minus80" file="snail-assassin/src/main.ts" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The same shape as *Cold Chain*'s `main.js` ([lesson 7](../lessons/07-scenes.qmd#the-five-scenes)): import the scenes, list them, make the game. Two extras: the game config is built by a function in `config/gameConfig.ts`, and the canvas gets accessibility attributes so a screen reader can describe it.
+:::
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F2.1: Where would it go?" .exercise #ex-f2.1}
+You're adding a fourth playable snail with a new ability. Which folders would you expect to change? Look at how the existing three are defined before you answer.
+
+[Answer](../answers/field-guide-answers.qmd#ex-f2.1)
+:::
+
+::: {.callout-tip title="Exercise F2.2: Phaser or not?" .exercise #ex-f2.2}
+Search `src/systems/` for `phaser`. What do you find? Now search `src/scenes/`. Why the difference?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f2.2)
+:::
+
+**Next:** [Scene flow](03-scene-flow.qmd)

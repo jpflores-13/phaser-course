@@ -1,0 +1,136 @@
+---
+title: "Capstone: a game from your research"
+subtitle: "One mechanic, one screen, five minutes of play, and the science told honestly."
+---
+
+The course ends where the Minus 80 Studios games begin: with something real from research, turned into a short game. Yours will be smaller than *Snail Assassin*, and that's the point. A small game you finish teaches you more than a big one you don't.
+
+## The rules
+
+- **One mechanic.** One verb, used well ([lesson 8](../lessons/08-mechanics.qmd#verbs-goals-obstacles)).
+- **One screen** to start. A camera and a bigger world can come later.
+- **Five minutes** from opening the page to seeing the end.
+- **Honest science.** Every claim the game makes is labelled *Verified*, *Hypothesis* or *Abstraction* ([the field guide](../field-guide/05-tuning-and-design.qmd#the-science-document)).
+- **Online.** It's done when someone else can play it from a link ([lesson 10](../lessons/10-ship.qmd#put-it-online)).
+
+## Timeline
+
+| When | What |
+|---|---|
+| Day 3, 12:15 | Pitch: your index card from [exercise 8.5](../lessons/08-mechanics.qmd#exercises), in two minutes |
+| Week 1 | A playable toy: the verb works, nothing else does |
+| Week 2 | The goal, the obstacle and the one choice. A tuning file. First playtest with three people |
+| Week 3 | Feedback and polish. The science file. Deployed |
+| Lab meeting | Everyone plays everyone's game |
+
+## Start from
+
+Either the empty starter, or the finished game if your idea is close to *Cold Chain*'s shape (walk somewhere, carry something, avoid something):
+
+```bash
+cp -r starter my-capstone          # a blank scene
+cp -r stopping-points/stopE my-capstone   # all five scenes, tuning, touch, saves
+```
+
+Then make it its own repository, so it can be deployed on its own:
+
+```bash
+cd my-capstone
+git init
+npm install
+npm run dev
+```
+
+## Two files before any code
+
+Put these at the top of your project. Fill them in before you write the game, and keep them up to date as it changes.
+
+**`DESIGN.md`**
+
+```markdown
+# <Title>
+
+One sentence: what you do, and why it matters.
+
+## Verb
+## Goal
+## Obstacle
+## Core loop
+1.
+2.
+3.
+
+## The choice
+What's worth a risk, and what does it cost?
+
+## Target experience
+How should it feel? (Tense? Calm? Frantic? Curious?)
+
+## Still deciding (proposals)
+```
+
+**`SCIENCE.md`**
+
+```markdown
+# The science in <Title>
+
+Labels: Verified = stated in a cited source · Hypothesis = proposed by the authors · Abstraction = our invention
+
+| What the game shows | Label | Source | What we simplified |
+|---|---|---|---|
+|  |  |  |  |
+
+## What players should leave knowing
+## What we got wrong on purpose, and why
+```
+
+## Example pitches
+
+To show the scale, not to copy. Each is one verb, one screen, five minutes.
+
+::: {.cards}
+::: {}
+**Loop Extruder**
+
+*Slide* a cohesin ring along a strand of DNA. Stop at a CTCF site that faces the right way to lock in a loop. Other proteins block the path; the ring falls off if you're too slow. *Simplified: one dimension, one ring, invented speeds.*
+:::
+
+::: {}
+**Cut & Tag**
+
+*Steer* a tethered enzyme to the one histone mark that matters among hundreds that don't. Cut in the wrong place and the background rises. *Simplified: a single nucleus, an exaggerated signal.*
+:::
+
+::: {}
+**Torpor**
+
+*Ration* body heat through a winter. Rousing costs energy but clears damage; staying cold saves fuel but builds up risk. *Simplified: one animal, a handful of variables, game-time days.*
+:::
+
+::: {}
+**Gut Feeling**
+
+*Route* signals through the enteric nervous system so a meal moves along at the right pace. Too fast or too slow, and it backs up. *Simplified: a handful of neurons, one reflex.*
+:::
+:::
+
+## Playtesting
+
+Three people, who haven't seen the game, one at a time ([*Snail Assassin*'s playtesting notes](../field-guide/07-grown-up.qmd#the-docs-folder) are a good model):
+
+1. Give them the link and say only "play however you like".
+2. Watch without talking. Note where they hesitate, misunderstand, or smile.
+3. Afterwards, ask: *What were you trying to do? What was the most frustrating moment? What did you learn about the science?*
+
+If two of three people misunderstand the same thing, it's the game, not them.
+
+## Done enough to share
+
+- [ ] Someone who's never seen it can start playing without you explaining anything.
+- [ ] There's a way to win, a way to lose (or a score), and a way to play again.
+- [ ] Every balance number is in one tuning file.
+- [ ] `SCIENCE.md` labels every claim, with sources.
+- [ ] It works on a phone, or the page says it needs a keyboard.
+- [ ] Sound can be turned off, and so can screen shake.
+- [ ] It's online, with `base: './'`, from a GitHub Actions workflow.
+- [ ] Three people have played it, and you changed something because of what you saw.

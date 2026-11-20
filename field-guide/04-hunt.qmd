@@ -1,0 +1,88 @@
+---
+title: "The hunt"
+subtitle: "A game loop without Arcade physics, and rules that don't know Phaser exists."
+---
+
+`HuntScene.ts` is the biggest file in the game, but almost none of it is rules. The rules live in `src/systems/`, and the scene's `update()` is the whole game loop in fifteen lines.
+
+## The loop
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/HuntScene.ts" method="update" >}}
+
+::: {.content-hidden when-format="revealjs"}
+It's [lesson 0](../lessons/00-engine.qmd#a-game-is-a-loop)'s loop, written out:
+
+1. **Clamp `delta`.** If the tab was in the background, the first frame back can have a `delta` of several seconds, and the octopus would jump across the reef. Capping it at 0.1 s means at worst the game runs a bit slow for one frame. *Cold Chain* doesn't do this, and should.
+2. **Read input** from the keyboard, then let touch override it, then let the accessibility assist adjust it. Three sources, one `input` object.
+3. **Step the hunt.** `stepHunt(state, input, dt)` moves everything and applies every rule for one frame, and returns a list of **events**: things that happened.
+4. **React** to each event: sounds, flashes, messages.
+5. **Draw** everything where the state says it is.
+:::
+
+## Rules as data and a function
+
+{{< snippet repo="minus80" file="snail-assassin/src/systems/hunt.ts" lines="21-21" >}}
+
+`state` is a plain object: positions, velocities, venom, the octopus, every fish. `stepHunt` takes it, the input, and the time step, and updates it. Nothing in `systems/` creates a sprite, plays a sound or reads a key.
+
+::: {.content-hidden when-format="revealjs"}
+That one decision buys three things:
+
+- **Tests.** A whole hunt can run in a test, a thousand frames in a millisecond, with no browser ([a grown-up project](07-grown-up.qmd)).
+- **Repeatable hunts.** `createHunt` takes a random seed. The same seed, the same inputs and the same time steps give exactly the same hunt, which makes bugs reproducible.
+- **Freedom to redraw.** The scene could switch from sprites to something else entirely and the rules wouldn't notice.
+
+The cost is more code: *Cold Chain* gets collisions and movement free from Arcade physics; here, every bit of it is written by hand.
+:::
+
+## Events, not callbacks
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/HuntScene.ts" lines="237-260" >}}
+
+::: {.content-hidden when-format="revealjs"}
+In *Cold Chain*, a collision calls `bump()` directly, and `bump()` does everything: knockback, thaw, sound, shake. Here, the hunt only *reports* `{ type: 'strike-miss', ... }`, and the scene decides how that looks and sounds. All the juice from [lesson 9](../lessons/09-feel.qmd) lives in `react()`, and none of it can break a rule.
+:::
+
+## Movement without Arcade
+
+{{< snippet repo="minus80" file="snail-assassin/src/systems/movement.ts" method="stepVelocity" >}}
+
+::: {.content-hidden when-format="revealjs"}
+This is [lesson 4](../lessons/04-physics.qmd#acceleration-and-drag)'s acceleration and drag, by hand: move the velocity toward the target velocity, by at most `acceleration × dt` while a key is held and `deceleration × dt` when not. `approach` (in `utils/math.ts`) does the "move toward, by at most" part.
+
+The snail's numbers in `tuning.ts` (acceleration 140, deceleration 220) are tiny next to the researcher's 1400 and 1800. That's the design document's "slow, patient" snail, in two numbers.
+:::
+
+## Holding still
+
+The octopus is where the design becomes code:
+
+{{< snippet repo="minus80" file="snail-assassin/src/systems/predator.ts" lines="48-52" >}}
+
+::: {.content-hidden when-format="revealjs"}
+Each frame the octopus's **awareness** rises with a *stimulus* and decays on its own. The stimulus is how close the snail is, times how much it's moving, but a still snail still counts for a little (`stillVisibility`, 0.08 in `tuning.ts`). Above `chaseAbove` it chases; below `loseInterestBelow` it gives up.
+
+So holding still doesn't make you invisible, it makes you nearly invisible, and the octopus's interest fades. And since `chaseSpeed` (62) is faster than any snail, holding still isn't a nice option, it's the *only* option. One small formula turns "do nothing" into the game's most important verb ([lesson 8](../lessons/08-mechanics.qmd#verbs-goals-obstacles)).
+:::
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F4.1: The reef wraps" .exercise #ex-f4.1}
+Swim off the right edge of the reef and you come back on the left. Find the function that does this. How would you do the same in *Cold Chain*, with Arcade physics?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f4.1)
+:::
+
+::: {.callout-tip title="Exercise F4.2: Clamp delta in Cold Chain" .exercise #ex-f4.2}
+Add `Snail Assassin`'s `delta` clamp to *Cold Chain*'s `Play.update()`. Which lines change? Where *doesn't* it help, given that *Cold Chain* uses Arcade physics?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f4.2)
+:::
+
+::: {.callout-tip title="Exercise F4.3: Tune the octopus" .exercise #ex-f4.3}
+Which single number in `tuning.ts` would you change to make the octopus notice a still snail more easily? Try doubling it with the game running. (In development, the backtick key opens a balancing panel too.)
+
+[Answer](../answers/field-guide-answers.qmd#ex-f4.3)
+:::
+
+**Next:** [Tuning and design docs](05-tuning-and-design.qmd)

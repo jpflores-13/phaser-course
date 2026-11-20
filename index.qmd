@@ -53,7 +53,7 @@ Complete copies of the game at the end of each block, so nobody gets left behind
 ::: {}
 **A real game to read**
 
-The field guide walks through *Snail Assassin* from [Minus 80 Studios](https://jpflores-13.github.io/Minus80Studios/), a game that wasn't written for teaching.
+The [field guide](field-guide/index.qmd) walks through *Snail Assassin* from [Minus 80 Studios](https://jpflores-13.github.io/Minus80Studios/), a game that wasn't written for teaching.
 :::
 :::
 

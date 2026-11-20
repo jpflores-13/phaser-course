@@ -1,0 +1,83 @@
+---
+title: "Scene flow"
+subtitle: "Nine scenes, and the same two calls you learned in lesson 7."
+---
+
+*Cold Chain* has five scenes. *Snail Assassin* has nine:
+
+```{mermaid}
+%%| fig-width: 9
+flowchart LR
+  B[Boot] --> SP[Splash] --> T[Title]
+  T --> SE[Settings] --> T
+  T --> SL[Select]
+  SL --> H[Hunt]
+  H -.->|launch + pause| P[Pause]
+  P -.->|resume| H
+  H -->|start| R[Results]
+  R --> D["Discovery<br/>Did you know?"]
+  R --> H
+  D --> T
+```
+
+| Scene | Job | *Cold Chain* equivalent |
+|---|---|---|
+| `Boot` | Draw every sprite in code, then pick the first scene | `Boot` |
+| `Splash` | The studio logo | none |
+| `Title` | The menu | `Title` |
+| `Settings` | Volume, text size, accessibility, key remapping | none |
+| `Select` | Choose one of three snails | none |
+| `Hunt` | The game itself | `Play` (+ `Hud`) |
+| `Pause` | Overlay with options | [exercise 7.1](../lessons/07-scenes.qmd#exercises) |
+| `Results` | Won or lost, with stats | `Results` |
+| `Discovery` | The science behind your snail | none |
+
+## Boot draws the art
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/BootScene.ts" method="makeTexture" >}}
+
+::: {.content-hidden when-format="revealjs"}
+There are no image files at all. `Boot` draws each sprite with a `Graphics` object (rectangles and circles, pixel by pixel), then `generateTexture` turns the drawing into a texture with a key, exactly as if it had been loaded from a PNG. The comment at the top of the scene says why: these are placeholders, and real art can replace them later under the same keys without touching any other scene.
+
+*Cold Chain* does the same thing one step earlier: its art is drawn by a Python script into PNG files. Both are ways to have a playable game before anyone has drawn anything.
+:::
+
+## Jumping to a scene
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/BootScene.ts" method="devStart" >}}
+
+::: {.content-hidden when-format="revealjs"}
+In development only (`import.meta.env.DEV`), `?scene=Hunt&char=catalyst` skips the splash, the title and the menu. When you're tuning the hunt, that saves dozens of clicks an hour. In the built game this code still exists, but the `DEV` check is always false, so it always starts at the splash.
+:::
+
+## Pause, the lesson 7 way
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/HuntScene.ts" method="pauseHunt" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`launch` the overlay, `pause` the hunt: the same two calls as [exercise 7.1](../answers/07-scenes-answers.qmd#ex-7.1), and the opposite of the [bug in 7.3](../answers/07-scenes-answers.qmd#ex-7.3). The pause screen passes data in (`characterId`) the same way `start` does.
+:::
+
+## Ending a hunt
+
+{{< snippet repo="minus80" file="snail-assassin/src/scenes/HuntScene.ts" method="finish" >}}
+
+::: {.content-hidden when-format="revealjs"}
+An `ended` flag so it only happens once, a sound, a short delay so the moment lands, then `start('Results', {...})` with everything the results screen needs. Compare *Cold Chain*'s `Play.finish()`: same steps, same reasons. The difference is the amount of data passed: the results screen here shows venom spent and which fish you caught, so `Hunt` hands all of it over rather than leaving it in the registry.
+:::
+
+## Find it in the code
+
+::: {.callout-tip title="Exercise F3.1: Follow the replay button" .exercise #ex-f3.1}
+On the results screen you can play again with the same snail. Find the code that does it. Which call does it use, and why doesn't the hunt need resetting by hand?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f3.1)
+:::
+
+::: {.callout-tip title="Exercise F3.2: Leaving the pause screen" .exercise #ex-f3.2}
+In `PauseScene.ts`, find what happens when you press **Esc**. What two things happen, in what order, and what does `close` do first?
+
+[Answer](../answers/field-guide-answers.qmd#ex-f3.2)
+:::
+
+**Next:** [The hunt](04-hunt.qmd)

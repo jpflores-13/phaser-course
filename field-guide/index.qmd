@@ -1,0 +1,57 @@
+---
+title: "Reading Snail Assassin"
+subtitle: "The field guide: a real Phaser game that wasn't written for teaching."
+---
+
+*Cold Chain* was written to be taught: one feature per lesson, small files, comments on everything. Real games aren't like that. This guide walks through [*Snail Assassin*](https://jpflores-13.github.io/Minus80Studios/snail-assassin/), a stealth game from Minus 80 Studios, to show the course's ideas in a codebase built to ship.
+
+> You are a cone snail: slow, patient, and armed with one of nature's most sophisticated venoms. Creep across the reef, stay unseen, and strike at exactly the right moment.
+>
+> — *Snail Assassin*'s design document
+
+Play it for five minutes before you read the code. Pay attention to the octopus.
+
+## Get the code
+
+The studio's repository is pinned in this course as a git submodule, at `field-guide/minus80/`. Every code excerpt in the guide comes from that pinned version, and every "view on GitHub" link points to exactly the same commit, so the guide doesn't go stale when the game changes.
+
+If you cloned the course with `--recurse-submodules`, you already have it. Otherwise:
+
+```bash
+git submodule update --init
+cd field-guide/minus80/snail-assassin
+npm install
+npm run dev
+```
+
+It runs at `http://localhost:8081`. In development, the address can jump straight to a scene, which saves a lot of clicking: `?scene=Hunt&char=catalyst`.
+
+## How it compares
+
+| | *Cold Chain* | *Snail Assassin* |
+|---|---|---|
+| Language | JavaScript | TypeScript |
+| Scenes | 5 | 9 |
+| Source | about 750 lines | about 4,500 lines |
+| Physics | Arcade | none: its own simulation, in plain TypeScript |
+| World | Tiled maps | a reef drawn in code |
+| Art and sound | made by a script, as files | drawn and synthesised in code at run time |
+| Tests | none | Vitest unit tests for the simulation |
+
+Two of those rows are the big ideas in the guide: a game can skip Arcade physics entirely, and the rules of a game can live in code that doesn't know Phaser exists.
+
+## The pages
+
+1. [Reading TypeScript](01-typescript.qmd): enough to read the code and ignore the types.
+2. [The layout](02-layout.qmd): what's in each folder, and why.
+3. [Scene flow](03-scene-flow.qmd): nine scenes, mapped onto [lesson 7](../lessons/07-scenes.qmd).
+4. [The hunt](04-hunt.qmd): the game loop, without Arcade physics.
+5. [Tuning and design docs](05-tuning-and-design.qmd): how design becomes numbers, honestly.
+6. [Phones and saves](06-phones-and-saves.qmd): touch controls and settings that survive.
+7. [A grown-up project](07-grown-up.qmd): tests, linting, docs, and what to copy into your own game.
+
+Each page ends with a few **find it in the code** exercises. The [answers](../answers/field-guide-answers.qmd) are on one page.
+
+::: {.callout-note title="Whose code is this?"}
+*Snail Assassin* belongs to Minus 80 Studios, and its license is the studio's own. It is not covered by this course's CC BY or MIT licenses. The guide quotes it for teaching; to reuse its code in your own game, ask the studio.
+:::
