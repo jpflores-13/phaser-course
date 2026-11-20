@@ -1,7 +1,6 @@
 ---
 title: "Physics"
 subtitle: "Let Arcade physics handle walls, collisions and bouncing carts."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,255 @@ format:
 - Tell `collider` from `overlap`, and react to both.
 - Use groups and the debug overlay.
 :::
+
+## Where you start
+
+[Stopping point B](03-movement.qmd#what-you-have) moves the researcher by changing `x` and `y` by hand. That works until two things need to touch: walls, carts, a freezer you can't walk through. Checking every pair yourself gets out of hand fast.
+
+**Arcade physics** does it for you. You give objects a **body**, tell Phaser which bodies affect each other, and it moves them and keeps them apart.
+
+::: {.content-hidden when-format="revealjs"}
+Phaser has two physics engines. **Arcade** uses only axis-aligned boxes and circles, and it's fast and predictable. That's what almost every 2D action game needs. **Matter** does real rigid-body physics: rotating shapes, stacking, joints, slopes. It's slower and much harder to control. *Cold Chain* and this course use Arcade. If you ever need things that tumble, look at Matter.
+:::
+
+## Turn physics on
+
+In `src/main.js`, add a `physics` block to the config:
+
+{{< snippet file="stopping-points/stopC/src/main.js" lines="14-17" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`default: 'arcade'` makes Arcade available as `this.physics` in every scene. The `debug` line turns the debug overlay on when the address ends in `?debug`, as in [lesson 0](00-engine.qmd#exercises). You'll use it constantly from now on.
+:::
+
+## Bodies and game objects
+
+A game object is what you see. A body is what the physics engine sees: a box, its velocity, what it bumps into.
+
+```js
+// a sprite and its body, in one call
+this.player = this.physics.add.sprite(100, 270, 'researcher', 1);
+
+// or give a body to something you already made
+this.physics.add.existing(this.freezer);
+```
+
+::: {.content-hidden when-format="revealjs"}
+The body is `sprite.body`. By default it's the size of the picture, which is often wrong: the researcher's picture includes empty space and a head. *Cold Chain* shrinks the body to the feet, so the researcher can walk "behind" the top edge of a bench:
+
+```js
+this.player.body.setSize(18, 14).setOffset(7, 17);
+```
+
+Turn on `?debug` and you'll see the body (a box), separate from the picture.
+:::
+
+## Velocity, not position
+
+With a body, stop changing `x` and `y` yourself. Set **velocity** in pixels per second, and the physics engine moves the body every frame, using `delta` for you.
+
+```js
+this.player.setVelocity(dx * 200, dy * 200);   // no delta needed
+```
+
+::: {.content-hidden when-format="revealjs"}
+If you set `x` directly on an object with a body, the body and the picture fall out of step, and collisions misbehave. To teleport a body, use `body.reset(x, y)`, which moves it and zeroes its velocity.
+:::
+
+## Acceleration and drag
+
+Setting velocity directly feels robotic: full speed instantly, stop instantly. Real things speed up and slow down.
+
+```js
+this.player.setMaxVelocity(220);                 // top speed
+this.player.setDrag(1800);                       // slowing down when you let go
+this.player.setAcceleration(dx * 1400, dy * 1400); // speeding up while a key is down
+```
+
+::: {.content-hidden when-format="revealjs"}
+- **Acceleration** changes velocity over time, in pixels per second per second.
+- **Max velocity** caps it.
+- **Drag** slows the body down, but only on an axis with **no acceleration**. That's why the researcher glides to a stop when you let go, and why drag doesn't fight you while you're walking.
+
+These three numbers are most of what makes movement "feel" a certain way. High acceleration and drag: snappy and precise. Low: floaty, slippery, heavy. You'll tune them in exercise 4.4, and *Cold Chain* lowers the drag on spills to make them slippery.
+:::
+
+## A class for the player
+
+The researcher has enough behaviour now to deserve its own class. It **extends** `Phaser.Physics.Arcade.Sprite`, so it's a sprite with a body that also knows how to walk.
+
+```js
+import Phaser from 'phaser';
+
+export class Researcher extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene, x, y) {
+    super(scene, x, y, 'researcher', 1);
+    scene.add.existing(this);          // put it on screen
+    scene.physics.add.existing(this);  // give it a body
+    this.setCollideWorldBounds(true);  // replaces Clamp from lesson 3
+    this.body.setSize(18, 14).setOffset(7, 17);
+  }
+
+  walk(direction) {
+    this.setMaxVelocity(220);
+    this.setDrag(1800);
+    this.setAcceleration(direction.x * 1400, direction.y * 1400);
+    if (direction.x !== 0) this.setFrame(9).setFlipX(direction.x < 0);
+    else if (direction.y !== 0) this.setFrame(direction.y < 0 ? 5 : 1);
+  }
+}
+```
+
+::: {.content-hidden when-format="revealjs"}
+Put it in `src/objects/Researcher.js` and make one in `create()` with `this.player = new Researcher(this, 96, 272);`. `direction` is a `Phaser.Math.Vector2`: build it from the keys as in lesson 3, then call `.normalize()` instead of dividing by the length yourself.
+
+The scene stays short, and everything about *how the researcher moves* lives in one file. Lesson 5 adds walking animations to `walk()`.
+:::
+
+## Static and dynamic
+
+Walls never move. Give them **static** bodies: cheaper, and nothing can push them.
+
+```js
+this.walls = this.physics.add.staticGroup();
+this.walls.create(16, 16, 'lab', 2);   // a wall tile
+this.walls.create(48, 16, 'lab', 2);
+```
+
+::: {.content-hidden when-format="revealjs"}
+A **group** is a collection of similar objects that share settings and can be collided with all at once. A static group makes static bodies.
+
+Stopping point C builds a whole room of walls and benches from a list of strings, one character per tile. Lesson 6 replaces that with a map drawn in Tiled.
+
+{{< snippet file="stopping-points/stopC/src/scenes/Play.js" lines="4-26" >}}
+
+If you move or scale a static body after making it, call `refreshBody()`. Static bodies don't update themselves, which is what makes them cheap.
+:::
+
+## Collide or overlap
+
+You tell Phaser which pairs of things interact, once, in `create()`.
+
+```js
+this.physics.add.collider(this.player, this.walls);   // solid: push apart
+this.physics.add.overlap(this.player, this.sample, this.pickUp, null, this);  // just tell me
+```
+
+| | `collider` | `overlap` |
+|---|---|---|
+| Bodies are pushed apart | yes | no |
+| Callback when they touch | optional | the whole point |
+| Use for | walls, carts, the freezer | pickups, zones, triggers |
+
+::: {.content-hidden when-format="revealjs"}
+Each takes two things (a sprite, a group, a tilemap layer), an optional callback, an optional **process callback** (return `false` from it to skip a collision), and the value of `this` inside the callbacks. That last argument is why there's a lone `this` at the end: without it, `this` inside `pickUp` would not be the scene ([lesson 1](01-javascript.qmd#the-one-thing-about-this)).
+
+The callback gets the two objects that touched, in the same order you passed them.
+:::
+
+## Pick up, put down
+
+{{< snippet file="stopping-points/stopC/src/scenes/Play.js" method="pickUp" >}}
+
+{{< snippet file="stopping-points/stopC/src/scenes/Play.js" method="deliver" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`disableBody(true, true)` turns off the body **and** hides the picture, so the overlap can't fire again. `enableBody(...)` brings it back. This is how you reuse objects instead of destroying and recreating them. Ignore the `sound.play` lines for now: sound is lesson 5.
+
+The **drop zone** is an invisible `zone` with a static body, a bit bigger than the freezer. The freezer itself is solid (a `collider`), so you can never overlap it; the zone in front of it is what you overlap.
+:::
+
+## Carts that bounce forever
+
+{{< snippet file="stopping-points/stopC/src/scenes/Play.js" method="addCart" >}}
+
+::: {.content-hidden when-format="revealjs"}
+- `setBounce(1)` keeps all the speed after hitting something, so a cart that hits a wall comes straight back.
+- `setCollideWorldBounds(true)` makes the edges of the world solid.
+- `setPushable(false)` means other bodies can't shove it. Without it, walking into a cart pushes it sideways out of its lane, and it keeps going that way (exercise 4.3).
+
+Carts are a dynamic group (`this.physics.add.group()`), because they move.
+:::
+
+::: {.callout-warning title="Phaser 3 habit" .phaser3}
+In Phaser 3, `group.children.each((cart) => ...)` loops over a group. In Phaser 4, `children` is a plain JavaScript `Set` with no `each`. Use `group.getChildren().forEach((cart) => ...)`.
+:::
+
+## Getting hit
+
+{{< snippet file="stopping-points/stopC/src/scenes/Play.js" method="bump" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The collider separates the researcher and the cart; the callback adds a knockback. `player.x - cart.x` points from the cart to the player, so the researcher flies *away* from it. `normalize()` makes that length 1, and `scale(320)` makes it a speed.
+:::
+
+## See the bodies
+
+Add `?debug` to the address.
+
+{{< game stopping-points/stopC debug="true" caption="Stopping point C with ?debug. Pink boxes move, blue boxes are static, green lines show velocity." >}}
+
+::: {.content-hidden when-format="revealjs"}
+When something collides wrongly (stuck on a corner, hit by thin air, walking through a wall), the debug overlay is the first thing to turn on. Nine times out of ten the body isn't where you thought.
+:::
+
+::: {.callout-tip title="Stopping point C" .stopping-point}
+Stopping point C is the end of lesson 5, so it also has animation and sound. To catch up after this lesson, copy it and leave those parts for now:
+
+```bash
+cp -r stopping-points/stopC my-cold-chain-c
+cd my-cold-chain-c && npm install && npm run dev
+```
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 4.1: Build it — a diagonal cart" .exercise #ex-4.1}
+Add a third cart that moves diagonally and bounces around the room like an old screensaver. Make sure it bounces off the freezer too.
+
+[Answer](../answers/04-physics-answers.qmd#ex-4.1)
+:::
+
+::: {.callout-tip title="Exercise 4.2: Predict it — a solid sample" .exercise #ex-4.2}
+You change the sample's `overlap` to a `collider`, with the same callback:
+
+```js
+this.physics.add.collider(this.player, this.sample, this.pickUp, null, this);
+```
+
+Does picking up still work? What do you notice?
+
+[Answer](../answers/04-physics-answers.qmd#ex-4.2)
+:::
+
+::: {.callout-tip title="Exercise 4.3: Spot the bug — the runaway cart" .exercise #ex-4.3}
+In a labmate's game, walking into the side of a cart shoves it out of its lane, and it drifts off diagonally forever. Their `addCart` is below. What's missing?
+
+```js
+addCart(x, y, axis, speed) {
+  const cart = this.carts.create(x, y, 'cart');
+  cart.setBounce(1).setCollideWorldBounds(true);
+  cart.setVelocity(axis === 'x' ? speed : 0, axis === 'y' ? speed : 0);
+  return cart;
+}
+```
+
+[Answer](../answers/04-physics-answers.qmd#ex-4.3)
+:::
+
+::: {.callout-tip title="Exercise 4.4: Tune it — ice rink or office floor" .exercise #ex-4.4}
+In `Researcher.js`, find the three numbers that control movement. Make the researcher feel (a) like they're on ice, (b) like they're very heavy, (c) twitchy and precise. Which number matters most for each?
+
+[Answer](../answers/04-physics-answers.qmd#ex-4.4)
+:::
+
+## Key points
+
+- Arcade physics gives objects boxy **bodies** and moves them by velocity. Turn it on in the game config.
+- Move bodies with velocity or acceleration, never by setting `x` and `y`. `delta` is handled for you.
+- Acceleration, max velocity and drag decide how movement feels. Drag only acts when acceleration is zero.
+- **Static** bodies (walls) never move. **Dynamic** bodies (players, carts) do. Groups hold many of either.
+- `collider` pushes bodies apart; `overlap` only reports. Both take a callback and the value of `this`.
+- `?debug` shows the bodies. Use it whenever collisions look wrong.
 
 **Next:** [Lesson 5: Assets and animation](05-assets.qmd)

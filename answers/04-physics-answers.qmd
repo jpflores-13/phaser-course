@@ -1,0 +1,58 @@
+---
+title: "Module 4 answers"
+subtitle: "Physics"
+---
+
+Back to [Module 4](../lessons/04-physics.qmd).
+
+## Exercise 4.1: Build it — a diagonal cart {#ex-4.1}
+
+`addCart` only moves along one axis, so make this one by hand, in the same group:
+
+```js
+const diagonal = this.carts.create(at(20), at(11), 'cart'); // <1>
+diagonal.setBounce(1).setCollideWorldBounds(true).setPushable(false);
+diagonal.setVelocity(120, 90); // <2>
+```
+1. Because it's in `this.carts`, it's already covered by every collider set up for carts: walls, the freezer, the player. That's the point of groups: add to the group, get the rules for free.
+2. Velocity on both axes. With `setBounce(1)` it reflects off whatever it hits and never loses speed.
+
+Bouncing off the freezer needs nothing extra: the scene already has `this.physics.add.collider(this.carts, this.freezer)`.
+
+{{< game solutions/04/ex-4.1 caption="A third cart, bouncing diagonally." >}}
+
+The full file is in `solutions/04/ex-4.1/`.
+
+## Exercise 4.2: Predict it — a solid sample {#ex-4.2}
+
+It still works: `collider` calls its callback when the bodies touch, just like `overlap`. But you **bump into** the sample first. The researcher stops for a moment against the tube before it disappears, because the collider separates the bodies in the same step it calls you back.
+
+Here it's subtle, because `pickUp` hides the tube at once. With something you don't remove (the drop zone), a collider would stop you dead in front of the freezer and you could never walk "into" the zone. Pickups, triggers and zones are overlaps. Use a collider only for things that should be solid.
+
+## Exercise 4.3: Spot the bug — the runaway cart {#ex-4.3}
+
+`setPushable(false)` is missing.
+
+Two dynamic bodies that collide push each other apart, sharing the push. When the researcher walks into the side of a cart, the cart gets some of the researcher's velocity, sideways to its lane. With `setBounce(1)` it never loses that speed, so it carries on diagonally forever.
+
+```js
+cart.setBounce(1).setCollideWorldBounds(true).setPushable(false);
+```
+
+With `pushable` off, the cart still collides with everything, but only the *other* body moves when they meet.
+
+You might reach for `setImmovable(true)` instead. That also stops the shove, but an immovable body isn't moved by **any** collision. Walls are immovable too, and when two immovable bodies meet, neither gives way, so the cart drives straight through the wall and out of the room. `pushable` is the narrower switch, and the right one here.
+
+## Exercise 4.4: Tune it — ice rink or office floor {#ex-4.4}
+
+| Feel | What to change | Try |
+|---|---|---|
+| **Ice** | Drag, way down. Acceleration down a bit. | drag 80, acceleration 600 |
+| **Heavy** | Acceleration down, max speed down, drag medium | acceleration 400, max 150, drag 900 |
+| **Twitchy** | Acceleration and drag both very high | acceleration 5000, drag 6000 |
+
+- **Drag** decides how long you slide after letting go. It's the "ice" number: *Cold Chain*'s spills drop it to 90.
+- **Acceleration** decides how long it takes to reach full speed. Low acceleration is what makes something feel heavy.
+- **Max speed** is the speed, but on its own it changes "fast or slow", not "how it feels".
+
+Most action games sit at the twitchy end for the player (you want control) and give other things more weight. Lesson 8 moves all of these numbers into one tuning file.

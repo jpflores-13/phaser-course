@@ -1,0 +1,64 @@
+---
+title: "Module 5 answers"
+subtitle: "Assets and animation"
+---
+
+Back to [Module 5](../lessons/05-assets.qmd).
+
+## Exercise 5.1: Build it — the freezer door {#ex-5.1}
+
+An animation of two frames, open then shut, played once:
+
+```js
+// create(), after the walk animations
+this.anims.create({
+  key: 'freezer-open',
+  frames: this.anims.generateFrameNumbers('freezer', { frames: [1, 0] }), // <1>
+  frameRate: 2, // <2>
+});
+
+// deliver()
+this.freezer.play('freezer-open'); // <3>
+```
+1. `frames: [1, 0]` picks frames in the order you list them: open, then shut. An animation stays on its last frame when it ends, so ending on 0 leaves the door shut.
+2. Two frames a second is half a second per frame.
+3. No `repeat`, so it plays once. And no `true` here: if a second sample arrives while the door is open, you *want* the animation to start again.
+
+The freezer is a `staticSprite`, so it has animations like any sprite. A static body doesn't stop the picture from changing.
+
+{{< game solutions/05/ex-5.1 caption="Store a sample and watch the door." >}}
+
+The full file is in `solutions/05/ex-5.1/`. The finished game does the same thing with `setFrame(1)` and a timer instead (`stopping-points/stopE/src/scenes/Play.js`, `deliver()`). Both are fine. The animation keeps the timing in one place; the timer is easier to change from code.
+
+## Exercise 5.2: Predict it — how long is a step? {#ex-5.2}
+
+- **One cycle** is 4 frames ÷ 10 frames per second = **0.4 seconds**: two steps, one per foot.
+- **`repeat: 0`** plays the four frames once and stops on the last one. The researcher takes two steps and then glides along on a standing frame, which looks like skating.
+- **`frameRate: 1`** shows each frame for a full second. You'll see the researcher hold each pose, like a slideshow, while sliding across the floor.
+
+`repeat` counts *extra* plays: `repeat: 2` plays three times. `-1` means forever.
+
+## Exercise 5.3: Spot the bug — frozen feet {#ex-5.3}
+
+`this.anims.play(...)` is missing its second argument, `true`.
+
+`walk()` runs every frame. Without `true`, every call restarts the animation from its first frame, so 60 times a second the researcher is sent back to frame 0 of the walk and never reaches frame 1. With `true` ("ignore if playing"), Phaser carries on with the animation that's already running and only switches when the key changes.
+
+```js
+this.anims.play(`walk-${this.facing}`, true);
+```
+
+This is one of the most common animation bugs, in any engine: *start* an animation on an event, but *keep it going* every frame.
+
+## Exercise 5.4: Tune it — moonwalking {#ex-5.4}
+
+At **frameRate 4**, the feet move far too slowly for the speed, so the researcher looks like they're gliding on ice with legs moving lazily: the "moonwalk". At **20** the legs blur, like a cartoon character running in place. Around 8–12 the feet roughly match the ground at a top speed of 220 px/s.
+
+Matching animation speed to movement speed is easy with `anims.timeScale`, which speeds up or slows down whatever is playing:
+
+```js
+// in walk(), after choosing the animation
+this.anims.timeScale = Phaser.Math.Clamp(this.body.speed / 220, 0.3, 1.5);
+```
+
+Now the steps slow down as the researcher decelerates, and speed up on a spill. Small touches like this are what lesson 9 is about.

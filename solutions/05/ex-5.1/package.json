@@ -1,0 +1,18 @@
+{
+  "name": "ex-5-1",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Get your samples into the -80 before they thaw. The running example from Phaser Course.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "4.2.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.8"
+  }
+}

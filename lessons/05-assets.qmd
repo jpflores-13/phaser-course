@@ -1,7 +1,6 @@
 ---
 title: "Assets and animation"
 subtitle: "Load everything up front and bring the researcher to life."
-draft: true
 format:
   html: default
   revealjs:
@@ -18,5 +17,186 @@ format:
 - Pick an animation from the player's state.
 - Play sounds, and know about the browser's autoplay rule.
 :::
+
+## Where you start
+
+After lesson 4 the researcher slides around the lab on a single frame per direction, in silence. This lesson adds the walk cycle and the sounds, which gets you to stopping point C.
+
+Everything you load goes through the **loader**, `this.load`, in `preload()`.
+
+## What the loader can load
+
+| Method | For | In *Cold Chain* |
+|---|---|---|
+| `load.image(key, url)` | one picture | the tube, the cart, dry ice |
+| `load.spritesheet(key, url, { frameWidth, frameHeight })` | a grid of equal frames | the researcher, the freezer |
+| `load.atlas(key, png, json)` | packed frames of any size, with names | (not used) |
+| `load.audio(key, url)` | a sound | pickup, deliver, bump |
+| `load.tilemapTiledJSON(key, url)` | a map from Tiled | lesson 6 |
+| `load.json(key, url)` | any data | |
+
+::: {.content-hidden when-format="revealjs"}
+A **spritesheet** is the simple choice: every frame the same size, numbered left to right, top to bottom. An **atlas** packs frames of different sizes tightly into one image, with a JSON file that names each one (`'researcher-walk-1'`). Tools like TexturePacker make atlases. They save memory and download time in big games; for a course-sized game, spritesheets are plenty.
+:::
+
+## The researcher spritesheet
+
+![The researcher: 12 frames of 32 × 32. Walking down (0–3), up (4–7) and sideways (8–11).](../assets/sprites/researcher.png){width="100%" style="image-rendering: pixelated; background: #d8dee6; border-radius: 6px"}
+
+```js
+this.load.spritesheet('researcher', 'sprites/researcher.png', { frameWidth: 32, frameHeight: 32 });
+```
+
+::: {.content-hidden when-format="revealjs"}
+Each walk is four frames: left foot forward, standing, right foot forward, standing. Played in a loop, that reads as walking. Four frames is the classic minimum; more frames make smoother motion but more drawing.
+:::
+
+## Make an animation
+
+An animation is a list of frames and a speed. Make it once, then any sprite can play it.
+
+```js
+this.anims.create({
+  key: 'walk-down',                       // the animation's name
+  frames: this.anims.generateFrameNumbers('researcher', { start: 0, end: 3 }),
+  frameRate: 10,                          // frames per second
+  repeat: -1,                             // loop forever (0 = play once)
+});
+```
+
+::: {.content-hidden when-format="revealjs"}
+`generateFrameNumbers` builds the frame list from a spritesheet. You can also pick frames out of order: `{ frames: [0, 1, 2, 1] }`.
+
+`this.anims` belongs to the **game**, not the scene: an animation made in one scene works in all of them. That also means making it twice gives a warning, so in a game with several scenes, make animations once, in a loading scene (lesson 7).
+
+Stopping point C makes all three walks in a loop:
+:::
+
+{{< snippet file="stopping-points/stopC/src/scenes/Play.js" lines="49-57" >}}
+
+## Play the right one
+
+The researcher's `walk()` picks the animation from the direction it's moving, and stops on a standing frame when it's still.
+
+{{< snippet file="stopping-points/stopC/src/objects/Researcher.js" method="walk" >}}
+
+::: {.content-hidden when-format="revealjs"}
+The `true` in `anims.play(key, true)` means "if this animation is already playing, carry on". `walk()` runs every frame, so without it the animation restarts every frame and never gets past its first frame (exercise 5.3).
+
+`this.facing` remembers the last direction, so the researcher stops facing the way they were walking. That's the same idea as in lesson 3, now driving animations instead of single frames.
+:::
+
+## Sound
+
+Load sounds like anything else, then play them by key.
+
+```js
+// preload()
+this.load.audio('pickup', 'audio/pickup.wav');
+
+// anywhere later
+this.sound.play('pickup');
+this.sound.play('bump', { volume: 0.6, rate: 1.2 });   // quieter, higher
+```
+
+::: {.content-hidden when-format="revealjs"}
+For sounds you start and stop (music, a looping alarm), keep the sound object: `this.music = this.sound.add('theme', { loop: true }); this.music.play();`, and later `this.music.stop()`.
+
+**Formats.** The course uses `.wav` because it works in every browser. WAV files are big, though. For a real game, export `.ogg` and `.mp3` and give the loader both: `this.load.audio('theme', ['audio/theme.ogg', 'audio/theme.mp3'])`. Phaser picks the first one the browser can play.
+:::
+
+## The autoplay rule
+
+Browsers don't let a page make sound until the person has clicked, tapped or pressed a key on it. Phaser handles this for you: audio is **locked** until the first input, then unlocks.
+
+```js
+this.sound.locked;   // true until the player has interacted
+```
+
+::: {.content-hidden when-format="revealjs"}
+That's one reason almost every web game starts with "press a key" or "tap to start": it unlocks the sound before the game needs it. *Cold Chain*'s title screen does this in lesson 7.
+:::
+
+## Show progress
+
+Big games take a while to load. The loader reports its progress, so you can draw a bar.
+
+{{< snippet file="stopping-points/stopE/src/scenes/Boot.js" lines="10-13" >}}
+
+::: {.content-hidden when-format="revealjs"}
+`progress` fires with a number from 0 to 1 as files arrive; `complete` fires at the end. *Cold Chain*'s files are tiny, so the bar flashes past. You'll see it properly on a slow connection (in your browser's developer tools, **Network** → **Throttling** → *Slow 4G*).
+:::
+
+## Where art and sound come from
+
+Making your own is the best option and the most work. Everything in *Cold Chain* was made for this course, by a script: `_scripts/make_assets.py` draws each sprite from a grid of letters and synthesises each sound from sine and square waves. Read it if you're curious.
+
+For your own games:
+
+- **[Kenney](https://kenney.nl/assets)**: thousands of consistent sprites, tiles and sounds, all CC0 (free for anything, no credit needed).
+- **[OpenGameArt](https://opengameart.org)** and **[itch.io](https://itch.io/game-assets/free)**: huge range, mixed licenses.
+- **[sfxr / jsfxr](https://sfxr.me)**: make retro sound effects in the browser.
+- **[Piskel](https://www.piskelapp.com)** and **[Aseprite](https://www.aseprite.org)**: draw pixel art and export spritesheets.
+
+::: {.content-hidden when-format="revealjs"}
+Check every license before you use something. CC0 means anything goes. CC BY means you must credit the author. "Free for personal use" means not in anything you publish. Keep a `CREDITS.md` as you go; it's miserable to reconstruct later.
+:::
+
+## What you have
+
+{{< game stopping-points/stopC caption="Stopping point C: walls, carts, a walk cycle and sound. Click first to unlock the sound." >}}
+
+::: {.callout-tip title="Stopping point C" .stopping-point}
+To catch up, copy `stopping-points/stopC` and run it:
+
+```bash
+cp -r stopping-points/stopC my-cold-chain-c
+cd my-cold-chain-c && npm install && npm run dev
+```
+:::
+
+## Exercises
+
+::: {.callout-tip title="Exercise 5.1: Build it — the freezer door" .exercise #ex-5.1}
+The freezer spritesheet has two frames: 0 is the door shut, 1 is the door open. Make an animation that shows the door open for half a second and then shut again, and play it whenever a sample is stored.
+
+[Answer](../answers/05-assets-answers.qmd#ex-5.1)
+:::
+
+::: {.callout-tip title="Exercise 5.2: Predict it — how long is a step?" .exercise #ex-5.2}
+`walk-side` has 4 frames at `frameRate: 10` with `repeat: -1`. How long is one full cycle of the walk? What would you see with `repeat: 0`? With `frameRate: 1`?
+
+[Answer](../answers/05-assets-answers.qmd#ex-5.2)
+:::
+
+::: {.callout-tip title="Exercise 5.3: Spot the bug — frozen feet" .exercise #ex-5.3}
+The researcher moves and turns, but the legs never move: each direction shows one frame. The animations exist. What's wrong?
+
+```js
+walk(direction) {
+  // ...acceleration as before...
+  if (direction.lengthSq() > 0.01) {
+    this.facing = Math.abs(direction.x) > Math.abs(direction.y) ? 'side' : direction.y < 0 ? 'up' : 'down';
+    this.anims.play(`walk-${this.facing}`);
+  }
+}
+```
+
+[Answer](../answers/05-assets-answers.qmd#ex-5.3)
+:::
+
+::: {.callout-tip title="Exercise 5.4: Tune it — moonwalking" .exercise #ex-5.4}
+Set the walk `frameRate` to 4, then to 20, and walk around. At which one do the feet look like they're sliding on the floor? Then try making the animation speed follow the actual speed, so it slows down as the researcher comes to a stop.
+
+[Answer](../answers/05-assets-answers.qmd#ex-5.4)
+:::
+
+## Key points
+
+- Load everything in `preload()`: `image`, `spritesheet`, `atlas`, `audio`, `tilemapTiledJSON`.
+- An animation is frames plus a frame rate, made once with `this.anims.create` and shared by the whole game.
+- Call `anims.play(key, true)` every frame; the `true` stops it restarting.
+- `this.sound.play(key)` plays a sound. Browsers keep sound locked until the first click or key press.
+- Check the license of every asset you didn't make, and keep a credits file.
 
 **Next:** [Lesson 6: Worlds: tilemaps and cameras](06-worlds.qmd)

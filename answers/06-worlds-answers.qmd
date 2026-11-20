@@ -1,0 +1,69 @@
+---
+title: "Module 6 answers"
+subtitle: "Worlds: tilemaps and cameras"
+---
+
+Back to [Module 6](../lessons/06-worlds.qmd).
+
+## Exercise 6.1: Build it — a minimap {#ex-6.1}
+
+A second camera, zoomed out to fit the whole map, that never follows anyone:
+
+```js
+const miniWidth = 200;
+const zoom = miniWidth / map.widthInPixels; // <1>
+const miniHeight = Math.round(map.heightInPixels * zoom);
+this.minimap = this.cameras
+  .add(this.scale.width - miniWidth - 16, 16, miniWidth, miniHeight) // <2>
+  .setZoom(zoom)
+  .setBackgroundColor(0x0f172a)
+  .centerOn(map.widthInPixels / 2, map.heightInPixels / 2); // <3>
+this.minimap.ignore(this.label); // <4>
+```
+1. 200 pixels of screen for 1280 pixels of map is a zoom of about 0.16.
+2. `cameras.add(x, y, width, height)` makes a camera that draws into that rectangle of the screen. It sees the same world as the main camera.
+3. Point it at the middle of the map. It doesn't follow, so it stays there.
+4. Every camera draws every game object unless told otherwise. Without this line the "Stored" label appears, tiny, in the minimap too.
+
+{{< game solutions/06/ex-6.1 caption="A minimap from a second camera." >}}
+
+The full file is in `solutions/06/ex-6.1/`. Cameras are cheap to add and very flexible: split screen, picture-in-picture, a zoomed-in "security camera" on the freezer are all a few lines each.
+
+## Exercise 6.2: Predict it — no bounds {#ex-6.2}
+
+In the **corner**, the camera keeps the researcher centred, so three-quarters of the screen shows the empty space beyond the map: the game's background colour, dark blue-grey. In the **middle** of the map, nothing changes, because the bounds only matter near the edges.
+
+`setBounds` is the difference between "a camera that follows the player" and "a camera that follows the player and never shows the void". With bounds, the researcher walks off-centre near edges, which is what you expect from almost every 2D game.
+
+## Exercise 6.3: Spot the bug — the invisible lab {#ex-6.3}
+
+The first argument to `addTilesetImage` is the tileset's name **inside the map**, which is `lab`. The second is the key of the image you loaded, `lab-tiles`. They passed the image key twice.
+
+With the wrong name, `addTilesetImage` can't find the tileset, logs a warning and returns `null`. Phaser still makes the layers, but they have no tileset to draw from, so they're invisible, and no tile has the `collides` property, so nothing is solid.
+
+```js
+const tiles = map.addTilesetImage('lab', 'lab-tiles');
+```
+
+The warning even tells you the right name: `Its tilesets are [...]` lists the tilesets the map really has. To see a tileset's name, open the map in Tiled and look at the **Tilesets** panel, or search the `.tmj` file for `"name"` inside `"tilesets"`.
+
+## Exercise 6.4: Tune it — the camera {#ex-6.4}
+
+- **Lerp 1**: the camera is glued to the researcher. Precise, but every small movement shakes the whole world, which can feel jittery.
+- **Lerp 0.12**: a slight ease. The researcher leads the camera a little, and stops feel soft. This is what *Cold Chain* uses.
+- **Lerp 0.02**: the camera lags so far behind that the researcher can walk off screen before it catches up. Disorienting, and dangerous with carts about.
+- **Deadzone 200 × 120**: the camera only moves when the researcher leaves a box in the middle. Calm, but you can't see far ahead in the direction you're walking.
+
+A top-down game where danger comes from every side wants the player near the centre. A side-scrolling platformer usually wants a wide, short deadzone (the camera doesn't bob with every jump) and often a **look-ahead**: an offset in the direction of movement, so you can see what you're running towards (`cam.setFollowOffset(-100, 0)` when moving right).
+
+## Exercise 6.5: Build it in Tiled — your own floor {#ex-6.5}
+
+There's no single answer. The steps that trip people up:
+
+1. **Save the copy next to the tileset image**, or fix the image path. The map stores the tileset image as a path relative to the map (`../tiles/lab.png`). Saving in `public/assets/maps/` keeps that path working.
+2. **Give new objects a Class.** A point with no class is ignored by `all('cart')`.
+3. **Add both cart properties**, `axis` (string: `x` or `y`) and `speed` (a number). A missing `speed` makes `prop(c, 'speed')` return `undefined`, and `addCart` falls back to its default of 100.
+4. **Load the new key**: `this.load.tilemapTiledJSON('my-floor', 'maps/my-floor.tmj')` and `this.make.tilemap({ key: 'my-floor' })`.
+5. **Hard refresh** the browser (`Shift` + reload) if your changes don't appear: browsers sometimes cache JSON files.
+
+If a bench you added doesn't block you, check it's on the `walls` layer, not `decor`.
